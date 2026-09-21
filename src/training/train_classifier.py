@@ -53,6 +53,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output-dir", type=str, default=None)
     parser.add_argument("--run-name", type=str, default=None)
     parser.add_argument(
+        "--content-crop",
+        type=str,
+        default=None,
+        choices=["true", "false"],
+        help="Apply crop_to_content before resizing (must match inference; see get_transforms docstring).",
+    )
+    parser.add_argument(
         "--max-samples-per-class",
         type=int,
         default=None,
@@ -80,6 +87,9 @@ def load_config(args: argparse.Namespace) -> dict:
         ("training", "early_stopping_patience"): args.patience,
         ("output", "output_dir"): args.output_dir,
         ("output", "run_name"): args.run_name,
+        ("preprocessing", "content_crop"): (
+            None if args.content_crop is None else args.content_crop == "true"
+        ),
     }
     for keys, value in overrides.items():
         if value is None:
@@ -167,8 +177,9 @@ def main() -> None:
     for name, split_df in (("train", train_df), ("val", val_df), ("test", test_df)):
         split_df[["path", "class_name", "label"]].to_csv(output_dir / f"{name}_split.csv", index=False)
 
-    train_transform = get_transforms(dataset_config.image_size, train=True)
-    eval_transform = get_transforms(dataset_config.image_size, train=False)
+    content_crop = config["preprocessing"]["content_crop"]
+    train_transform = get_transforms(dataset_config.image_size, train=True, content_crop=content_crop)
+    eval_transform = get_transforms(dataset_config.image_size, train=False, content_crop=content_crop)
 
     train_ds = HASYSymbolDataset(train_df, transform=train_transform)
     val_ds = HASYSymbolDataset(val_df, transform=eval_transform)
@@ -222,6 +233,7 @@ def main() -> None:
     best_val_acc = 0.0
     epochs_without_improvement = 0
     patience = config["training"]["early_stopping_patience"]
+    training_start = time.time()
 
     for epoch in range(1, config["training"]["epochs"] + 1):
         start = time.time()
@@ -247,6 +259,7 @@ def main() -> None:
                 "train_acc": train_acc,
                 "val_loss": val_loss,
                 "val_acc": val_acc,
+                "epoch_seconds": elapsed,
             }
         )
 
@@ -261,6 +274,8 @@ def main() -> None:
                 logger.info("Early stopping: no val_acc improvement for %d epochs", patience)
                 break
 
+    total_training_seconds = time.time() - training_start
+
     # Final test-set evaluation using the best checkpoint.
     model.load_state_dict(torch.load(output_dir / "model.pt", map_location=device))
     test_loss, test_acc = run_epoch(model, test_loader, criterion, device)
@@ -270,6 +285,7 @@ def main() -> None:
         "class_names": dataset_config.class_names,
         "latex": {name: dataset_config.selected_classes[name] for name in dataset_config.class_names},
         "image_size": dataset_config.image_size,
+        "content_crop": content_crop,
     }
     with open(output_dir / "class_mapping.json", "w") as f:
         json.dump(class_mapping, f, indent=2)
@@ -288,6 +304,10 @@ def main() -> None:
         "train_size": len(train_df),
         "val_size": len(val_df),
         "test_size": len(test_df),
+        "param_count": sum(p.numel() for p in model.parameters()),
+        "epochs_run": len(history),
+        "total_training_seconds": total_training_seconds,
+        "device": str(device),
     }
     with open(output_dir / "summary.json", "w") as f:
         json.dump(summary, f, indent=2)

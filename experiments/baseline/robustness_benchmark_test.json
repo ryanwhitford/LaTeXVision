@@ -1,0 +1,57 @@
+{
+  "clean": {
+    "accuracy": 0.4025,
+    "n": 400,
+    "n_no_prediction": 0
+  },
+  "translation": {
+    "accuracy": 0.4025,
+    "n": 400,
+    "n_no_prediction": 0
+  },
+  "rotation": {
+    "accuracy": 0.23,
+    "n": 400,
+    "n_no_prediction": 0
+  },
+  "scale_zoomed_out": {
+    "accuracy": 0.45,
+    "n": 400,
+    "n_no_prediction": 0
+  },
+  "scale_zoomed_in": {
+    "accuracy": 0.3775,
+    "n": 400,
+    "n_no_prediction": 0
+  },
+  "noise": {
+    "accuracy": 0.1475,
+    "n": 400,
+    "n_no_prediction": 0
+  },
+  "blur": {
+    "accuracy": 0.2125,
+    "n": 400,
+    "n_no_prediction": 0
+  },
+  "thin_stroke": {
+    "accuracy": 0.01,
+    "n": 400,
+    "n_no_prediction": 35
+  },
+  "thick_stroke": {
+    "accuracy": 0.32,
+    "n": 400,
+    "n_no_prediction": 0
+  },
+  "off_center": {
+    "accuracy": 0.375,
+    "n": 400,
+    "n_no_prediction": 0
+  },
+  "imperfect_crop": {
+    "accuracy": 0.3625,
+    "n": 400,
+    "n_no_prediction": 0
+  }
+}

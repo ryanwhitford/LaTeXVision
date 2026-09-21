@@ -1,0 +1,20 @@
+data:
+  batch_size: 64
+  num_workers: 0
+dataset_config: configs/dataset.yaml
+model:
+  architecture: simple_cnn
+  dropout: 0.3
+  use_batchnorm: true
+output:
+  output_dir: models
+  run_name: symbol_classifier_v1_seed123
+training:
+  balance_strategy: weighted_sampler
+  device: auto
+  early_stopping_patience: 12
+  epochs: 60
+  learning_rate: 0.001
+  optimizer: adam
+  seed: 123
+  weight_decay: 0.0001

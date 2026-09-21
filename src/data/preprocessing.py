@@ -19,38 +19,70 @@ HASY_MEAN = 0.8542
 HASY_STD = 0.3529
 
 
-def get_transforms(image_size: int, train: bool) -> transforms.Compose:
+class ContentCrop:
+    """torchvision-transform-compatible wrapper around `crop_to_content`.
+
+    Falls back to the original image if no ink is found (shouldn't happen
+    for real HASYv2/drawn-symbol images, but avoids a hard crash on a
+    pathological all-white input).
+    """
+
+    def __call__(self, image: Image.Image) -> Image.Image:
+        cropped = crop_to_content(image)
+        return cropped if cropped is not None else image
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}()"
+
+
+def get_transforms(image_size: int, train: bool, content_crop: bool = False) -> transforms.Compose:
     """Return the preprocessing pipeline for the given split.
+
+    `content_crop`: whether to run `ContentCrop` (ink-bbox crop + padding)
+    before resizing. This MUST be the same for whatever pipeline trained the
+    model and whatever pipeline serves it -- see
+    experiments/audit/AUDIT_REPORT.md, Finding 1, for what happens when it
+    isn't (a systematic, ~55-point accuracy drop in production despite a
+    healthy-looking offline test score). `src/api/inference.py` and
+    `train_classifier.py`/`evaluate_classifier.py` both call this function
+    rather than applying `ContentCrop` independently, specifically so they
+    cannot drift apart again.
 
     Augmentation (train only) is a small random affine (rotation, translation,
     scale) plus mild erasing, chosen to preserve the identity of visually
     similar symbol pairs (6/9, x/times, o/0).
     """
+    steps: list = [ContentCrop()] if content_crop else []
+    steps.append(transforms.Resize((image_size, image_size)))
+
     if train:
-        return transforms.Compose(
-            [
-                transforms.Resize((image_size, image_size)),
-                transforms.RandomAffine(
-                    degrees=10,
-                    translate=(0.08, 0.08),
-                    scale=(0.9, 1.1),
-                    shear=5,
-                    fill=255,
-                ),
-                transforms.ToTensor(),
-                transforms.Normalize(mean=[HASY_MEAN], std=[HASY_STD]),
-                # Small occlusion patches -- extra regularization, useful now that
-                # minority classes are oversampled (same image seen repeatedly/epoch).
-                transforms.RandomErasing(p=0.2, scale=(0.02, 0.08), value=0.0),
-            ]
-        )
-    return transforms.Compose(
-        [
-            transforms.Resize((image_size, image_size)),
+        steps += [
+            transforms.RandomAffine(
+                degrees=10,
+                translate=(0.08, 0.08),
+                scale=(0.9, 1.1),
+                shear=5,
+                fill=255,
+            ),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[HASY_MEAN], std=[HASY_STD]),
+            # Small occlusion patches -- extra regularization, useful now that
+            # minority classes are oversampled (same image seen repeatedly/epoch).
+            transforms.RandomErasing(p=0.2, scale=(0.02, 0.08), value=0.0),
+        ]
+    else:
+        steps += [
             transforms.ToTensor(),
             transforms.Normalize(mean=[HASY_MEAN], std=[HASY_STD]),
         ]
-    )
+
+    return transforms.Compose(steps)
+
+
+def has_ink(image: Image.Image, ink_threshold: int = 250) -> bool:
+    """True if `image` has any non-background pixel (i.e. isn't a blank canvas)."""
+    arr = np.array(image.convert("L"))
+    return bool((arr < ink_threshold).any())
 
 
 def crop_to_content(

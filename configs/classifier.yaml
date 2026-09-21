@@ -3,6 +3,14 @@
 
 dataset_config: configs/dataset.yaml
 
+preprocessing:
+  # Whether to crop to the ink bounding box (+ padding) before resizing.
+  # MUST match what src/api/inference.py serves with -- it always applies
+  # this transform's own content_crop setting via class_mapping.json, so
+  # changing this here and retraining is sufficient; nothing else to sync.
+  # See experiments/audit/AUDIT_REPORT.md, Finding 1.
+  content_crop: true
+
 data:
   batch_size: 64
   # HASYv2 (filtered) is small enough that macOS multiprocessing worker

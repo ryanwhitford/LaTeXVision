@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import torch
-from sklearn.metrics import confusion_matrix, f1_score
+from sklearn.metrics import confusion_matrix, f1_score, precision_recall_fscore_support
 from torch.utils.data import DataLoader
 
 from src.data.hasy import HASYSymbolDataset
@@ -83,6 +83,8 @@ def main() -> None:
         class_mapping = json.load(f)
     class_names = class_mapping["class_names"]
     image_size = class_mapping["image_size"]
+    # Same historical default as SymbolPredictor.load -- see its comment.
+    content_crop = class_mapping.get("content_crop", True)
 
     device = resolve_device(args.device)
     model = SymbolClassifier(num_classes=len(class_names))
@@ -90,7 +92,7 @@ def main() -> None:
     model = model.to(device)
 
     split_df = pd.read_csv(run_dir / f"{args.split}_split.csv")
-    transform = get_transforms(image_size, train=False)
+    transform = get_transforms(image_size, train=False, content_crop=content_crop)
     dataset = HASYSymbolDataset(split_df, transform=transform)
     loader = DataLoader(dataset, batch_size=args.batch_size, shuffle=False)
 
@@ -100,10 +102,15 @@ def main() -> None:
 
     accuracy = float(correct_arr.mean())
     macro_f1 = f1_score(labels, preds, average="macro")
+    weighted_f1 = f1_score(labels, preds, average="weighted")
     acc_ci_lo, acc_ci_hi = bootstrap_accuracy_ci(correct_arr)
     logger.info(
-        "%s accuracy=%.4f (95%% CI %.4f-%.4f)  macro_f1=%.4f  n=%d",
-        args.split, accuracy, acc_ci_lo, acc_ci_hi, macro_f1, len(labels),
+        "%s accuracy=%.4f (95%% CI %.4f-%.4f)  macro_f1=%.4f  weighted_f1=%.4f  n=%d",
+        args.split, accuracy, acc_ci_lo, acc_ci_hi, macro_f1, weighted_f1, len(labels),
+    )
+
+    precisions, recalls, f1s, supports = precision_recall_fscore_support(
+        labels, preds, labels=list(range(len(class_names))), zero_division=0
     )
 
     cm = confusion_matrix(labels, preds, labels=list(range(len(class_names))))
@@ -111,16 +118,23 @@ def main() -> None:
     for i, name in enumerate(class_names):
         support = int(cm[i].sum())
         if support == 0:
-            per_class_acc[name] = {"accuracy": None, "ci_low": None, "ci_high": None, "support": 0}
+            per_class_acc[name] = {
+                "accuracy": None, "ci_low": None, "ci_high": None, "support": 0,
+                "precision": None, "recall": None, "f1": None,
+            }
             logger.info("  %-10s acc=None  support=0", name)
             continue
         class_correct = correct_arr[labels_arr == i]
         acc = float(class_correct.mean())
         ci_lo, ci_hi = bootstrap_accuracy_ci(class_correct)
-        per_class_acc[name] = {"accuracy": acc, "ci_low": ci_lo, "ci_high": ci_hi, "support": support}
+        per_class_acc[name] = {
+            "accuracy": acc, "ci_low": ci_lo, "ci_high": ci_hi, "support": support,
+            "precision": float(precisions[i]), "recall": float(recalls[i]), "f1": float(f1s[i]),
+        }
         flag = "  <- low support, wide CI" if support < 15 else ""
         logger.info(
-            "  %-10s acc=%.4f (95%% CI %.4f-%.4f)  support=%3d%s", name, acc, ci_lo, ci_hi, support, flag
+            "  %-10s acc=%.4f (95%% CI %.4f-%.4f)  prec=%.3f rec=%.3f f1=%.3f  support=%3d%s",
+            name, acc, ci_lo, ci_hi, precisions[i], recalls[i], f1s[i], support, flag,
         )
 
     pd.DataFrame(cm, index=class_names, columns=class_names).to_csv(run_dir / f"{args.split}_confusion_matrix.csv")
@@ -144,6 +158,7 @@ def main() -> None:
         "accuracy": accuracy,
         "accuracy_ci_95": [acc_ci_lo, acc_ci_hi],
         "macro_f1": macro_f1,
+        "weighted_f1": weighted_f1,
         "per_class_accuracy": per_class_acc,
         "n_examples": len(labels),
     }

@@ -9,7 +9,7 @@ from pathlib import Path
 import torch
 from PIL import Image
 
-from src.data.preprocessing import crop_to_content, get_transforms
+from src.data.preprocessing import get_transforms, has_ink
 from src.models.classifier import SymbolClassifier
 
 
@@ -30,13 +30,19 @@ class SymbolPredictor:
         latex_by_name: dict[str, str],
         image_size: int,
         device: torch.device,
+        content_crop: bool = True,
     ) -> None:
         self.model = model
         self.class_names = class_names
         self.latex_by_name = latex_by_name
         self.image_size = image_size
         self.device = device
-        self.transform = get_transforms(image_size, train=False)
+        # Must match whatever this specific checkpoint was trained with --
+        # read from class_mapping.json (see `load` below) rather than
+        # hardcoded, so an older checkpoint trained without content_crop
+        # doesn't silently get served with a mismatched pipeline. See
+        # get_transforms' docstring / experiments/audit/AUDIT_REPORT.md.
+        self.transform = get_transforms(image_size, train=False, content_crop=content_crop)
 
     @classmethod
     def load(cls, run_dir: str | Path, device: torch.device | None = None) -> "SymbolPredictor":
@@ -56,6 +62,11 @@ class SymbolPredictor:
             latex_by_name=class_mapping["latex"],
             image_size=class_mapping["image_size"],
             device=resolved_device,
+            # Older checkpoints (pre-audit) predate this key; they were, in
+            # fact, always served with content_crop applied (main.py called
+            # crop_to_content unconditionally) -- so True is the historically
+            # accurate default, not just a fallback guess.
+            content_crop=class_mapping.get("content_crop", True),
         )
 
     @torch.no_grad()
@@ -64,11 +75,10 @@ class SymbolPredictor:
 
         Returns None if no content is detected (e.g. a blank canvas).
         """
-        cropped = crop_to_content(image)
-        if cropped is None:
+        if not has_ink(image):
             return None
 
-        tensor = self.transform(cropped).unsqueeze(0).to(self.device)
+        tensor = self.transform(image).unsqueeze(0).to(self.device)
         logits = self.model(tensor)
         probs = torch.softmax(logits, dim=1).squeeze(0)
 

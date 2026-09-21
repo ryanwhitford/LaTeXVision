@@ -1,0 +1,9 @@
+{
+  "best_val_acc": 0.9603658536585366,
+  "test_acc": 0.9642041127189642,
+  "test_loss": 0.15787331905196117,
+  "num_classes": 26,
+  "train_size": 6123,
+  "val_size": 1312,
+  "test_size": 1313
+}
