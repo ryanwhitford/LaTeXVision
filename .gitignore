@@ -1,0 +1,39 @@
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+.coverage
+htmlcov/
+
+# data & trained models (large / regenerable -- see README for how to
+# regenerate: download HASYv2, then `python -m src.training.train_classifier`)
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+data/synthetic/*
+!data/synthetic/.gitkeep
+models/*/
+!models/.gitkeep
+
+# logs / artifacts
+runs/
+*.log
+.DS_Store
+
+# env / secrets
+.env
+.env.*
+
+# editors
+.vscode/
+.idea/

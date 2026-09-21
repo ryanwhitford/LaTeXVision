@@ -1,0 +1,35 @@
+# Training configuration for src.training.train_classifier
+# Any value here can be overridden with a matching --flag on the CLI.
+
+dataset_config: configs/dataset.yaml
+
+data:
+  batch_size: 64
+  # HASYv2 (filtered) is small enough that macOS multiprocessing worker
+  # spawn overhead dwarfs any parallel-loading benefit; keep this at 0
+  # unless the dataset config grows substantially.
+  num_workers: 0
+
+model:
+  architecture: simple_cnn
+  dropout: 0.3
+  use_batchnorm: true
+
+training:
+  epochs: 60
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  optimizer: adam
+  # How to counter HASYv2's per-class imbalance (e.g. 'x': 46 train examples
+  # vs '\infty': ~2000): "weighted_sampler" oversamples minority classes so
+  # every class gets roughly equal exposure per epoch (recommended -- see
+  # src/training/train_classifier.py); "class_weights" instead reweights the
+  # loss and leaves sampling untouched; "none" disables both.
+  balance_strategy: weighted_sampler
+  seed: 42
+  device: auto # auto | cpu | cuda | mps
+  early_stopping_patience: 12
+
+output:
+  output_dir: models
+  run_name: symbol_classifier_v1

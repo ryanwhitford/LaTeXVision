@@ -1,0 +1,51 @@
+# HASYv2 dataset configuration for the Phase 1 symbol classifier.
+#
+# HASYv2 is derived from detexify (github.com/kirel/detexify) query logs:
+# users hand-drew a symbol to search for its LaTeX command. Because of that
+# origin, a handful of ASCII-typable symbols that nobody looks up this way
+# are simply absent from the 369-class vocabulary -- notably '=', '(' and
+# ')'. Grouping symbols are therefore limited to square brackets here.
+# Parentheses/equals can be reintroduced later via the synthetic generator
+# (Phase 6) or a different source; this is a real dataset constraint, not
+# an oversight.
+
+raw_dir: data/raw/hasyv2_download
+labels_csv: hasy-data-labels.csv
+symbols_csv: symbols.csv
+image_size: 32
+
+# Friendly class name -> HASYv2 "latex" label, exactly as it appears in
+# hasy-data-labels.csv. Edit this mapping to change the training vocabulary;
+# nothing else in the codebase needs to change.
+selected_classes:
+  "0": "0"
+  "1": "1"
+  "2": "2"
+  "3": "3"
+  "4": "4"
+  "5": "5"
+  "6": "6"
+  "7": "7"
+  "8": "8"
+  "9": "9"
+  a: "a"
+  b: "b"
+  c: "c"
+  x: "x"
+  y: "y"
+  z: "z"
+  plus: "+"
+  minus: "-"
+  times: "\\times"
+  div: "\\div"
+  lt: "<"
+  gt: ">"
+  lbracket: "["
+  rbracket: "]"
+  sqrt: "\\sqrt{}"
+  infty: "\\infty"
+
+split:
+  val_fraction: 0.15
+  test_fraction: 0.15
+  seed: 42
