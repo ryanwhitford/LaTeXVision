@@ -1,0 +1,373 @@
+{
+  "split": "test",
+  "n_examples": 1313,
+  "n_wrong": 28,
+  "worst_confusions": [
+    {
+      "true": "times",
+      "predicted": "x",
+      "count": 9
+    },
+    {
+      "true": "x",
+      "predicted": "times",
+      "count": 3
+    },
+    {
+      "true": "a",
+      "predicted": "infty",
+      "count": 2
+    },
+    {
+      "true": "y",
+      "predicted": "4",
+      "count": 1
+    },
+    {
+      "true": "7",
+      "predicted": "z",
+      "count": 1
+    },
+    {
+      "true": "sqrt",
+      "predicted": "y",
+      "count": 1
+    },
+    {
+      "true": "z",
+      "predicted": "7",
+      "count": 1
+    },
+    {
+      "true": "c",
+      "predicted": "lt",
+      "count": 1
+    },
+    {
+      "true": "rbracket",
+      "predicted": "1",
+      "count": 1
+    },
+    {
+      "true": "infty",
+      "predicted": "a",
+      "count": 1
+    }
+  ],
+  "most_confident_wrong": [
+    {
+      "path": "/Users/ryanc/Desktop/Projects/LaTeXVision/data/raw/hasyv2_download/hasy-data/v2-132824.png",
+      "true": "lbracket",
+      "predicted": "y",
+      "confidence": 0.9961732029914856
+    },
+    {
+      "path": "/Users/ryanc/Desktop/Projects/LaTeXVision/data/raw/hasyv2_download/hasy-data/v2-132962.png",
+      "true": "lbracket",
+      "predicted": "c",
+      "confidence": 0.9773331880569458
+    },
+    {
+      "path": "/Users/ryanc/Desktop/Projects/LaTeXVision/data/raw/hasyv2_download/hasy-data/v2-29694.png",
+      "true": "a",
+      "predicted": "infty",
+      "confidence": 0.9509707689285278
+    },
+    {
+      "path": "/Users/ryanc/Desktop/Projects/LaTeXVision/data/raw/hasyv2_download/hasy-data/v2-138083.png",
+      "true": "infty",
+      "predicted": "div",
+      "confidence": 0.9276078343391418
+    },
+    {
+      "path": "/Users/ryanc/Desktop/Projects/LaTeXVision/data/raw/hasyv2_download/hasy-data/v2-30845.png",
+      "true": "x",
+      "predicted": "times",
+      "confidence": 0.9209370017051697
+    },
+    {
+      "path": "/Users/ryanc/Desktop/Projects/LaTeXVision/data/raw/hasyv2_download/hasy-data/v2-30893.png",
+      "true": "y",
+      "predicted": "4",
+      "confidence": 0.8464028239250183
+    },
+    {
+      "path": "/Users/ryanc/Desktop/Projects/LaTeXVision/data/raw/hasyv2_download/hasy-data/v2-30825.png",
+      "true": "x",
+      "predicted": "times",
+      "confidence": 0.834126889705658
+    },
+    {
+      "path": "/Users/ryanc/Desktop/Projects/LaTeXVision/data/raw/hasyv2_download/hasy-data/v2-30969.png",
+      "true": "z",
+      "predicted": "7",
+      "confidence": 0.7960647344589233
+    },
+    {
+      "path": "/Users/ryanc/Desktop/Projects/LaTeXVision/data/raw/hasyv2_download/hasy-data/v2-06695.png",
+      "true": "times",
+      "predicted": "x",
+      "confidence": 0.7500624656677246
+    },
+    {
+      "path": "/Users/ryanc/Desktop/Projects/LaTeXVision/data/raw/hasyv2_download/hasy-data/v2-75901.png",
+      "true": "times",
+      "predicted": "x",
+      "confidence": 0.733909547328949
+    },
+    {
+      "path": "/Users/ryanc/Desktop/Projects/LaTeXVision/data/raw/hasyv2_download/hasy-data/v2-29659.png",
+      "true": "a",
+      "predicted": "infty",
+      "confidence": 0.7078781723976135
+    },
+    {
+      "path": "/Users/ryanc/Desktop/Projects/LaTeXVision/data/raw/hasyv2_download/hasy-data/v2-13136.png",
+      "true": "rbracket",
+      "predicted": "1",
+      "confidence": 0.6767405867576599
+    }
+  ],
+  "most_uncertain": [
+    {
+      "path": "/Users/ryanc/Desktop/Projects/LaTeXVision/data/raw/hasyv2_download/hasy-data/v2-76137.png",
+      "true": "times",
+      "top1": "times",
+      "top1_prob": 0.5036938786506653,
+      "top2": "x",
+      "top2_prob": 0.494396448135376,
+      "correct": true
+    },
+    {
+      "path": "/Users/ryanc/Desktop/Projects/LaTeXVision/data/raw/hasyv2_download/hasy-data/v2-145451.png",
+      "true": "sqrt",
+      "top1": "x",
+      "top1_prob": 0.3020639419555664,
+      "top2": "z",
+      "top2_prob": 0.2886067032814026,
+      "correct": false
+    },
+    {
+      "path": "/Users/ryanc/Desktop/Projects/LaTeXVision/data/raw/hasyv2_download/hasy-data/v2-144991.png",
+      "true": "sqrt",
+      "top1": "y",
+      "top1_prob": 0.3881596624851227,
+      "top2": "sqrt",
+      "top2_prob": 0.3647192716598511,
+      "correct": false
+    },
+    {
+      "path": "/Users/ryanc/Desktop/Projects/LaTeXVision/data/raw/hasyv2_download/hasy-data/v2-76293.png",
+      "true": "times",
+      "top1": "times",
+      "top1_prob": 0.5145972371101379,
+      "top2": "x",
+      "top2_prob": 0.48521119356155396,
+      "correct": true
+    },
+    {
+      "path": "/Users/ryanc/Desktop/Projects/LaTeXVision/data/raw/hasyv2_download/hasy-data/v2-76352.png",
+      "true": "times",
+      "top1": "x",
+      "top1_prob": 0.5169054865837097,
+      "top2": "times",
+      "top2_prob": 0.48272138833999634,
+      "correct": false
+    },
+    {
+      "path": "/Users/ryanc/Desktop/Projects/LaTeXVision/data/raw/hasyv2_download/hasy-data/v2-20165.png",
+      "true": "2",
+      "top1": "2",
+      "top1_prob": 0.5195125937461853,
+      "top2": "z",
+      "top2_prob": 0.47086572647094727,
+      "correct": true
+    },
+    {
+      "path": "/Users/ryanc/Desktop/Projects/LaTeXVision/data/raw/hasyv2_download/hasy-data/v2-00423.png",
+      "true": "7",
+      "top1": "z",
+      "top1_prob": 0.5247963070869446,
+      "top2": "7",
+      "top2_prob": 0.4744013845920563,
+      "correct": false
+    },
+    {
+      "path": "/Users/ryanc/Desktop/Projects/LaTeXVision/data/raw/hasyv2_download/hasy-data/v2-139529.png",
+      "true": "infty",
+      "top1": "a",
+      "top1_prob": 0.4904976785182953,
+      "top2": "infty",
+      "top2_prob": 0.4314762055873871,
+      "correct": false
+    },
+    {
+      "path": "/Users/ryanc/Desktop/Projects/LaTeXVision/data/raw/hasyv2_download/hasy-data/v2-30871.png",
+      "true": "x",
+      "top1": "x",
+      "top1_prob": 0.5314686894416809,
+      "top2": "times",
+      "top2_prob": 0.4666071832180023,
+      "correct": true
+    },
+    {
+      "path": "/Users/ryanc/Desktop/Projects/LaTeXVision/data/raw/hasyv2_download/hasy-data/v2-29772.png",
+      "true": "c",
+      "top1": "lt",
+      "top1_prob": 0.4198697805404663,
+      "top2": "z",
+      "top2_prob": 0.3536691665649414,
+      "correct": false
+    },
+    {
+      "path": "/Users/ryanc/Desktop/Projects/LaTeXVision/data/raw/hasyv2_download/hasy-data/v2-75680.png",
+      "true": "times",
+      "top1": "times",
+      "top1_prob": 0.5348767638206482,
+      "top2": "x",
+      "top2_prob": 0.46469104290008545,
+      "correct": true
+    },
+    {
+      "path": "/Users/ryanc/Desktop/Projects/LaTeXVision/data/raw/hasyv2_download/hasy-data/v2-138078.png",
+      "true": "infty",
+      "top1": "infty",
+      "top1_prob": 0.5341938138008118,
+      "top2": "a",
+      "top2_prob": 0.46192631125450134,
+      "correct": true
+    }
+  ],
+  "per_class_fp_fn": {
+    "0": {
+      "false_negatives": 0,
+      "false_positives": 0,
+      "mean_confidence_when_true_class": 0.9904001355171204
+    },
+    "1": {
+      "false_negatives": 0,
+      "false_positives": 1,
+      "mean_confidence_when_true_class": 0.9617264270782471
+    },
+    "2": {
+      "false_negatives": 1,
+      "false_positives": 0,
+      "mean_confidence_when_true_class": 0.8937207460403442
+    },
+    "3": {
+      "false_negatives": 0,
+      "false_positives": 0,
+      "mean_confidence_when_true_class": 0.9703596830368042
+    },
+    "4": {
+      "false_negatives": 0,
+      "false_positives": 1,
+      "mean_confidence_when_true_class": 0.9875528812408447
+    },
+    "5": {
+      "false_negatives": 0,
+      "false_positives": 0,
+      "mean_confidence_when_true_class": 0.9732934832572937
+    },
+    "6": {
+      "false_negatives": 0,
+      "false_positives": 0,
+      "mean_confidence_when_true_class": 0.9804008603096008
+    },
+    "7": {
+      "false_negatives": 1,
+      "false_positives": 1,
+      "mean_confidence_when_true_class": 0.8868455290794373
+    },
+    "8": {
+      "false_negatives": 0,
+      "false_positives": 0,
+      "mean_confidence_when_true_class": 0.9893398284912109
+    },
+    "9": {
+      "false_negatives": 0,
+      "false_positives": 0,
+      "mean_confidence_when_true_class": 0.9885663986206055
+    },
+    "a": {
+      "false_negatives": 2,
+      "false_positives": 2,
+      "mean_confidence_when_true_class": 0.9196295142173767
+    },
+    "b": {
+      "false_negatives": 1,
+      "false_positives": 0,
+      "mean_confidence_when_true_class": 0.9258344173431396
+    },
+    "c": {
+      "false_negatives": 1,
+      "false_positives": 1,
+      "mean_confidence_when_true_class": 0.9383718371391296
+    },
+    "div": {
+      "false_negatives": 0,
+      "false_positives": 1,
+      "mean_confidence_when_true_class": 0.9982383847236633
+    },
+    "gt": {
+      "false_negatives": 0,
+      "false_positives": 0,
+      "mean_confidence_when_true_class": 0.9932628273963928
+    },
+    "infty": {
+      "false_negatives": 3,
+      "false_positives": 2,
+      "mean_confidence_when_true_class": 0.9876993894577026
+    },
+    "lbracket": {
+      "false_negatives": 2,
+      "false_positives": 0,
+      "mean_confidence_when_true_class": 0.9813798666000366
+    },
+    "lt": {
+      "false_negatives": 0,
+      "false_positives": 1,
+      "mean_confidence_when_true_class": 0.9904168248176575
+    },
+    "minus": {
+      "false_negatives": 0,
+      "false_positives": 1,
+      "mean_confidence_when_true_class": 0.993175745010376
+    },
+    "plus": {
+      "false_negatives": 0,
+      "false_positives": 0,
+      "mean_confidence_when_true_class": 0.9935755133628845
+    },
+    "rbracket": {
+      "false_negatives": 1,
+      "false_positives": 0,
+      "mean_confidence_when_true_class": 0.9608078002929688
+    },
+    "sqrt": {
+      "false_negatives": 2,
+      "false_positives": 0,
+      "mean_confidence_when_true_class": 0.9496678113937378
+    },
+    "times": {
+      "false_negatives": 9,
+      "false_positives": 3,
+      "mean_confidence_when_true_class": 0.8064108490943909
+    },
+    "x": {
+      "false_negatives": 3,
+      "false_positives": 11,
+      "mean_confidence_when_true_class": 0.6904861330986023
+    },
+    "y": {
+      "false_negatives": 1,
+      "false_positives": 2,
+      "mean_confidence_when_true_class": 0.9170693159103394
+    },
+    "z": {
+      "false_negatives": 1,
+      "false_positives": 1,
+      "mean_confidence_when_true_class": 0.9523846507072449
+    }
+  }
+}
