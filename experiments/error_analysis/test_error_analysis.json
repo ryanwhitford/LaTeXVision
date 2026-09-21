@@ -56,73 +56,73 @@
   ],
   "most_confident_wrong": [
     {
-      "path": "/Users/ryanc/Desktop/Projects/LaTeXVision/data/raw/hasyv2_download/hasy-data/v2-132824.png",
+      "path": "data/raw/hasyv2_download/hasy-data/v2-132824.png",
       "true": "lbracket",
       "predicted": "y",
       "confidence": 0.9961732029914856
     },
     {
-      "path": "/Users/ryanc/Desktop/Projects/LaTeXVision/data/raw/hasyv2_download/hasy-data/v2-132962.png",
+      "path": "data/raw/hasyv2_download/hasy-data/v2-132962.png",
       "true": "lbracket",
       "predicted": "c",
       "confidence": 0.9773331880569458
     },
     {
-      "path": "/Users/ryanc/Desktop/Projects/LaTeXVision/data/raw/hasyv2_download/hasy-data/v2-29694.png",
+      "path": "data/raw/hasyv2_download/hasy-data/v2-29694.png",
       "true": "a",
       "predicted": "infty",
       "confidence": 0.9509707689285278
     },
     {
-      "path": "/Users/ryanc/Desktop/Projects/LaTeXVision/data/raw/hasyv2_download/hasy-data/v2-138083.png",
+      "path": "data/raw/hasyv2_download/hasy-data/v2-138083.png",
       "true": "infty",
       "predicted": "div",
       "confidence": 0.9276078343391418
     },
     {
-      "path": "/Users/ryanc/Desktop/Projects/LaTeXVision/data/raw/hasyv2_download/hasy-data/v2-30845.png",
+      "path": "data/raw/hasyv2_download/hasy-data/v2-30845.png",
       "true": "x",
       "predicted": "times",
       "confidence": 0.9209370017051697
     },
     {
-      "path": "/Users/ryanc/Desktop/Projects/LaTeXVision/data/raw/hasyv2_download/hasy-data/v2-30893.png",
+      "path": "data/raw/hasyv2_download/hasy-data/v2-30893.png",
       "true": "y",
       "predicted": "4",
       "confidence": 0.8464028239250183
     },
     {
-      "path": "/Users/ryanc/Desktop/Projects/LaTeXVision/data/raw/hasyv2_download/hasy-data/v2-30825.png",
+      "path": "data/raw/hasyv2_download/hasy-data/v2-30825.png",
       "true": "x",
       "predicted": "times",
       "confidence": 0.834126889705658
     },
     {
-      "path": "/Users/ryanc/Desktop/Projects/LaTeXVision/data/raw/hasyv2_download/hasy-data/v2-30969.png",
+      "path": "data/raw/hasyv2_download/hasy-data/v2-30969.png",
       "true": "z",
       "predicted": "7",
       "confidence": 0.7960647344589233
     },
     {
-      "path": "/Users/ryanc/Desktop/Projects/LaTeXVision/data/raw/hasyv2_download/hasy-data/v2-06695.png",
+      "path": "data/raw/hasyv2_download/hasy-data/v2-06695.png",
       "true": "times",
       "predicted": "x",
       "confidence": 0.7500624656677246
     },
     {
-      "path": "/Users/ryanc/Desktop/Projects/LaTeXVision/data/raw/hasyv2_download/hasy-data/v2-75901.png",
+      "path": "data/raw/hasyv2_download/hasy-data/v2-75901.png",
       "true": "times",
       "predicted": "x",
       "confidence": 0.733909547328949
     },
     {
-      "path": "/Users/ryanc/Desktop/Projects/LaTeXVision/data/raw/hasyv2_download/hasy-data/v2-29659.png",
+      "path": "data/raw/hasyv2_download/hasy-data/v2-29659.png",
       "true": "a",
       "predicted": "infty",
       "confidence": 0.7078781723976135
     },
     {
-      "path": "/Users/ryanc/Desktop/Projects/LaTeXVision/data/raw/hasyv2_download/hasy-data/v2-13136.png",
+      "path": "data/raw/hasyv2_download/hasy-data/v2-13136.png",
       "true": "rbracket",
       "predicted": "1",
       "confidence": 0.6767405867576599
@@ -130,7 +130,7 @@
   ],
   "most_uncertain": [
     {
-      "path": "/Users/ryanc/Desktop/Projects/LaTeXVision/data/raw/hasyv2_download/hasy-data/v2-76137.png",
+      "path": "data/raw/hasyv2_download/hasy-data/v2-76137.png",
       "true": "times",
       "top1": "times",
       "top1_prob": 0.5036938786506653,
@@ -139,7 +139,7 @@
       "correct": true
     },
     {
-      "path": "/Users/ryanc/Desktop/Projects/LaTeXVision/data/raw/hasyv2_download/hasy-data/v2-145451.png",
+      "path": "data/raw/hasyv2_download/hasy-data/v2-145451.png",
       "true": "sqrt",
       "top1": "x",
       "top1_prob": 0.3020639419555664,
@@ -148,7 +148,7 @@
       "correct": false
     },
     {
-      "path": "/Users/ryanc/Desktop/Projects/LaTeXVision/data/raw/hasyv2_download/hasy-data/v2-144991.png",
+      "path": "data/raw/hasyv2_download/hasy-data/v2-144991.png",
       "true": "sqrt",
       "top1": "y",
       "top1_prob": 0.3881596624851227,
@@ -157,7 +157,7 @@
       "correct": false
     },
     {
-      "path": "/Users/ryanc/Desktop/Projects/LaTeXVision/data/raw/hasyv2_download/hasy-data/v2-76293.png",
+      "path": "data/raw/hasyv2_download/hasy-data/v2-76293.png",
       "true": "times",
       "top1": "times",
       "top1_prob": 0.5145972371101379,
@@ -166,7 +166,7 @@
       "correct": true
     },
     {
-      "path": "/Users/ryanc/Desktop/Projects/LaTeXVision/data/raw/hasyv2_download/hasy-data/v2-76352.png",
+      "path": "data/raw/hasyv2_download/hasy-data/v2-76352.png",
       "true": "times",
       "top1": "x",
       "top1_prob": 0.5169054865837097,
@@ -175,7 +175,7 @@
       "correct": false
     },
     {
-      "path": "/Users/ryanc/Desktop/Projects/LaTeXVision/data/raw/hasyv2_download/hasy-data/v2-20165.png",
+      "path": "data/raw/hasyv2_download/hasy-data/v2-20165.png",
       "true": "2",
       "top1": "2",
       "top1_prob": 0.5195125937461853,
@@ -184,7 +184,7 @@
       "correct": true
     },
     {
-      "path": "/Users/ryanc/Desktop/Projects/LaTeXVision/data/raw/hasyv2_download/hasy-data/v2-00423.png",
+      "path": "data/raw/hasyv2_download/hasy-data/v2-00423.png",
       "true": "7",
       "top1": "z",
       "top1_prob": 0.5247963070869446,
@@ -193,7 +193,7 @@
       "correct": false
     },
     {
-      "path": "/Users/ryanc/Desktop/Projects/LaTeXVision/data/raw/hasyv2_download/hasy-data/v2-139529.png",
+      "path": "data/raw/hasyv2_download/hasy-data/v2-139529.png",
       "true": "infty",
       "top1": "a",
       "top1_prob": 0.4904976785182953,
@@ -202,7 +202,7 @@
       "correct": false
     },
     {
-      "path": "/Users/ryanc/Desktop/Projects/LaTeXVision/data/raw/hasyv2_download/hasy-data/v2-30871.png",
+      "path": "data/raw/hasyv2_download/hasy-data/v2-30871.png",
       "true": "x",
       "top1": "x",
       "top1_prob": 0.5314686894416809,
@@ -211,7 +211,7 @@
       "correct": true
     },
     {
-      "path": "/Users/ryanc/Desktop/Projects/LaTeXVision/data/raw/hasyv2_download/hasy-data/v2-29772.png",
+      "path": "data/raw/hasyv2_download/hasy-data/v2-29772.png",
       "true": "c",
       "top1": "lt",
       "top1_prob": 0.4198697805404663,
@@ -220,7 +220,7 @@
       "correct": false
     },
     {
-      "path": "/Users/ryanc/Desktop/Projects/LaTeXVision/data/raw/hasyv2_download/hasy-data/v2-75680.png",
+      "path": "data/raw/hasyv2_download/hasy-data/v2-75680.png",
       "true": "times",
       "top1": "times",
       "top1_prob": 0.5348767638206482,
@@ -229,7 +229,7 @@
       "correct": true
     },
     {
-      "path": "/Users/ryanc/Desktop/Projects/LaTeXVision/data/raw/hasyv2_download/hasy-data/v2-138078.png",
+      "path": "data/raw/hasyv2_download/hasy-data/v2-138078.png",
       "true": "infty",
       "top1": "infty",
       "top1_prob": 0.5341938138008118,

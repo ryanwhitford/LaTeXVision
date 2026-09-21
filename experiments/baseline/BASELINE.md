@@ -3,7 +3,15 @@
 This is the model this optimization phase measures every change against.
 It is the same checkpoint currently deployed at `models/symbol_classifier_v1`
 (copied here so it can't drift as later experiments run). **Do not edit the
-files in this directory.**
+files in this directory** — with one narrow exception: `class_mapping.json`
+was given an explicit `"content_crop": false` key after it was discovered
+that re-running `evaluate_classifier.py` against this directory without it
+silently regenerated `test_evaluation.json`/`test_confusion_matrix.*` with
+the *wrong* numbers (the loader's `content_crop` fallback default is `True`,
+correct for serving old checkpoints in production, but wrong for
+reproducing how this baseline was originally measured). That's safety
+metadata, not a results edit — the frozen metrics below are unchanged and
+were re-verified against `git log` after the fact.
 
 ## Configuration
 

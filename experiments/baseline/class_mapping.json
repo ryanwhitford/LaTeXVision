@@ -55,5 +55,6 @@
     "y": "y",
     "z": "z"
   },
-  "image_size": 32
+  "image_size": 32,
+  "content_crop": false
 }
