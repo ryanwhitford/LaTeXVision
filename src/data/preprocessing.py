@@ -10,6 +10,8 @@ heavy distortion destroys the stroke shape a human reader relies on.
 
 from __future__ import annotations
 
+import numpy as np
+from PIL import Image
 from torchvision import transforms
 
 # Computed once over a 2000-image sample of the selected-class HASYv2 subset.
@@ -49,3 +51,38 @@ def get_transforms(image_size: int, train: bool) -> transforms.Compose:
             transforms.Normalize(mean=[HASY_MEAN], std=[HASY_STD]),
         ]
     )
+
+
+def crop_to_content(
+    image: Image.Image, ink_threshold: int = 250, padding_fraction: float = 0.2
+) -> Image.Image | None:
+    """Crop a grayscale image to its drawn content, padded to a square.
+
+    HASYv2 training images are tightly cropped around the glyph. A raw
+    canvas drawing is not -- the symbol is small within a mostly-blank
+    square -- so classifying it unmodified would present the model with a
+    very different scale distribution than it was trained on. This finds
+    the bounding box of "ink" (non-background) pixels, pads it, and pastes
+    it onto a square white canvas so the aspect ratio is preserved under
+    the caller's subsequent `Resize`.
+
+    Returns None if no ink is found (a blank canvas).
+    """
+    arr = np.array(image.convert("L"))
+    ink_rows, ink_cols = np.where(arr < ink_threshold)
+    if len(ink_rows) == 0:
+        return None
+
+    top, bottom = ink_rows.min(), ink_rows.max()
+    left, right = ink_cols.min(), ink_cols.max()
+
+    height, width = bottom - top + 1, right - left + 1
+    side = max(height, width)
+    pad = int(side * padding_fraction)
+    side += 2 * pad
+
+    canvas = Image.new("L", (side, side), color=255)
+    cropped = image.convert("L").crop((left, top, right + 1, bottom + 1))
+    offset = ((side - width) // 2, (side - height) // 2)
+    canvas.paste(cropped, offset)
+    return canvas

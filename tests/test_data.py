@@ -1,9 +1,10 @@
 from pathlib import Path
 
 import pytest
+from PIL import Image, ImageDraw
 
 from src.data.hasy import HASYSymbolDataset, load_dataset_config, load_labels, stratified_split
-from src.data.preprocessing import get_transforms
+from src.data.preprocessing import crop_to_content, get_transforms
 
 DATASET_CONFIG_PATH = Path(__file__).resolve().parent.parent / "configs" / "dataset.yaml"
 
@@ -58,3 +59,23 @@ def test_dataset_returns_correctly_shaped_tensor():
     image, label = dataset[0]
     assert image.shape == (1, config.image_size, config.image_size)
     assert isinstance(label, int)
+
+
+def test_crop_to_content_returns_none_for_blank_canvas():
+    blank = Image.new("L", (320, 320), color=255)
+    assert crop_to_content(blank) is None
+
+
+def test_crop_to_content_crops_and_squares_off_center_drawing():
+    canvas = Image.new("L", (320, 320), color=255)
+    draw = ImageDraw.Draw(canvas)
+    # A small, off-center, non-square mark -- like a real canvas drawing.
+    draw.rectangle([40, 40, 80, 140], fill=0)
+
+    cropped = crop_to_content(canvas)
+    assert cropped is not None
+    assert cropped.size[0] == cropped.size[1]  # padded to square
+    assert cropped.size[0] < canvas.size[0]  # actually cropped, not the whole canvas
+    # Center pixel should be ink (roughly where the drawn mark ends up).
+    cx, cy = cropped.size[0] // 2, cropped.size[1] // 2
+    assert cropped.getpixel((cx, cy)) < 128

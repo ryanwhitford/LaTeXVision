@@ -13,3 +13,4 @@ python-multipart>=0.0.9
 tqdm>=4.66
 pytest>=8.0
 requests>=2.31
+httpx2>=0.1  # required by starlette.testclient (FastAPI TestClient) in tests

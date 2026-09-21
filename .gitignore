@@ -37,3 +37,6 @@ runs/
 # editors
 .vscode/
 .idea/
+
+# local dev-server launcher config (machine-specific paths)
+.claude/launch.json

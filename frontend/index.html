@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LaTeXVision</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script>
+    window.MathJax = { tex: { inlineMath: [['$', '$']] }, svg: { fontCache: 'global' } };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="brand">
+        <span class="brand-mark">&Sigma;</span>
+        <div>
+          <h1>LaTeXVision</h1>
+          <p class="tagline">Handwritten symbol recognition &mdash; Phase 1/2</p>
+        </div>
+      </div>
+      <span class="status-pill" id="status-pill">connecting&hellip;</span>
+    </header>
+
+    <main class="layout">
+      <section class="panel canvas-panel">
+        <div class="panel-label">Input</div>
+        <canvas id="canvas" width="320" height="320"></canvas>
+        <div class="controls">
+          <button id="recognize-btn" class="btn btn-primary">Recognize</button>
+          <button id="clear-btn" class="btn btn-secondary">Clear</button>
+        </div>
+        <p class="hint">
+          Draw one symbol: digits <code>0&ndash;9</code>, variables <code>a b c x y z</code>,
+          operators <code>+ &minus; &times; &divide; &lt; &gt;</code>, brackets <code>[ ]</code>,
+          <code>&radic;</code>, or <code>&infin;</code>.
+        </p>
+      </section>
+
+      <section class="panel result-panel">
+        <div class="panel-label">Prediction</div>
+        <div id="result-empty" class="result-empty">
+          Draw a symbol and press <strong>Recognize</strong>.
+        </div>
+        <div id="result-content" class="result-content hidden">
+          <div class="predicted-symbol" id="predicted-symbol">&mdash;</div>
+          <div class="confidence-row">
+            <span class="confidence-label">confidence</span>
+            <div class="confidence-bar-track">
+              <div class="confidence-bar-fill" id="confidence-bar"></div>
+            </div>
+            <span class="confidence-value" id="confidence-value">&mdash;</span>
+          </div>
+          <div class="top-k" id="top-k"></div>
+        </div>
+        <div id="result-error" class="result-error hidden"></div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span id="latency">&nbsp;</span>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

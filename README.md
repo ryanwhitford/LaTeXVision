@@ -33,28 +33,40 @@ flowchart TD
 
     style A fill:#e8f0fe,stroke:#4285f4
     style B fill:#fef7e0,stroke:#f9ab00
+    style C fill:#e6f4ea,stroke:#34a853
     style E fill:#e6f4ea,stroke:#34a853
-    style H fill:#fce8e6,stroke:#ea4335
 ```
 
-**Implemented today:** the boxes in green/yellow above (`C`–`E`) for the
-single-symbol case, plus training/evaluation tooling around them. Everything
-downstream of a single classified symbol (`D`, `F`, `G`, and the browser/API
-integration in `A`/`B`) is designed for but not yet built — see
-[Roadmap](#roadmap).
+**Implemented today:** the full loop for a single symbol — `A`, `B`, `C`,
+`E`, and back to `A`. A browser canvas posts a drawing to FastAPI, which
+crops it to content (`C`), classifies it with `SymbolClassifier` (`E`), and
+returns a prediction rendered back in the page. For a single already-known
+symbol, its LaTeX is just a lookup in `class_mapping.json` — there's no
+localization or relationship inference to do yet, so `D`, `F`, `G`, and `H`
+are designed for but not yet built (they're only meaningful once an image
+can contain more than one symbol) — see [Roadmap](#roadmap).
 
-## Current capabilities (Phase 1)
+## Current capabilities
 
+**Phase 1 — symbol classification:**
 - Load and filter the HASYv2 handwritten-symbol dataset to a configurable
   26-class vocabulary.
 - Train a small CNN (`SymbolClassifier`) to classify a single handwritten
   symbol from a 32x32 grayscale crop.
-- Evaluate with accuracy, macro F1, per-class accuracy, and a confusion
-  matrix.
+- Evaluate with accuracy, macro F1, per-class accuracy (with bootstrapped
+  confidence intervals), and a confusion matrix.
+
+**Phase 2 — browser interface:**
+- A FastAPI backend (`src/api/main.py`) exposing `POST /recognize`: accepts
+  a drawn-symbol image, crops it to content, classifies it, and returns the
+  predicted symbol, its LaTeX, confidence, and the top-5 candidates.
+- A canvas frontend (`frontend/`) — draw with mouse, trackpad, or touch,
+  press Recognize, see the predicted symbol rendered via MathJax with a
+  confidence bar and ranked alternatives.
+
 - **Not yet implemented:** multi-symbol detection, spatial relationships,
-  LaTeX generation, the FastAPI backend, and the browser frontend. These are
-  Phase 2+ (see [Roadmap](#roadmap)) and are deliberately out of scope until
-  the classification baseline above is solid.
+  and LaTeX generation for full expressions (only a single symbol at a time
+  is supported today). These are Phase 3+ (see [Roadmap](#roadmap)).
 
 ## Dataset
 
@@ -230,24 +242,45 @@ alone.
 
 ## API
 
-**Not yet implemented.** Phase 2 will add a FastAPI backend
-(`src/api/main.py`) exposing a `POST /recognize` endpoint that accepts a
-single-symbol image and returns `{"symbol": str, "confidence": float}`
-using the classifier trained above.
+```bash
+uvicorn src.api.main:app --reload
+```
+
+Serves the frontend at `http://127.0.0.1:8000/` and the API alongside it.
+By default it loads `models/symbol_classifier_v1`; override with the
+`LATEXVISION_MODEL_DIR` environment variable to point at a different run.
+
+- `GET /health` → `{"status": "ok", "model_loaded": bool}`
+- `POST /recognize` — multipart form field `file`: a symbol image (e.g. a
+  canvas PNG export, typically RGBA with a transparent background, which is
+  flattened onto white before classification). The image is cropped to its
+  drawn content (`src/data/preprocessing.py:crop_to_content`) before
+  classification, since a raw canvas drawing has very different scale/
+  framing than HASYv2's tightly-cropped training images. Returns:
+  ```json
+  {
+    "symbol": "x", "latex": "x", "confidence": 0.94,
+    "top_k": [{"symbol": "x", "latex": "x", "confidence": 0.94}, "..."]
+  }
+  ```
+  `400` if the canvas has no content; `503` if no trained model is loaded.
 
 ## Frontend
 
-**Not yet implemented.** Phase 2 will add a static HTML/CSS/JS page
-(`frontend/`) with a drawing canvas, "Recognize" and "Clear" buttons, and a
-prediction display, styled as a clean/technical/minimal research-tool
-interface.
+Static HTML/CSS/JS at `frontend/` (canvas + "Recognize"/"Clear", served by
+the FastAPI backend above — no separate build step or server). Drawing uses
+the Pointer Events API so mouse, trackpad, and touch all work through the
+same handlers. The predicted symbol is rendered via MathJax (loaded from a
+CDN) so LaTeX commands like `\times` or `\infty` show as their actual glyph,
+not the raw string; a confidence bar and the top-5 ranked alternatives are
+shown alongside it for a fuller view of the model's output, not just the
+single top prediction.
 
 ## Roadmap
 
-- [x] **Phase 1 — Symbol classification baseline** (this README's scope):
-      HASYv2 loader, preprocessing/augmentation, CNN classifier, training,
-      evaluation, tests.
-- [ ] **Phase 2 — Browser interface:** canvas → FastAPI → single-symbol
+- [x] **Phase 1 — Symbol classification baseline:** HASYv2 loader,
+      preprocessing/augmentation, CNN classifier, training, evaluation, tests.
+- [x] **Phase 2 — Browser interface:** canvas → FastAPI → single-symbol
       prediction → rendered result.
 - [ ] **Phase 3 — Symbol localization:** connected-component / contour
       detection to find multiple symbol regions in one image, each cropped
@@ -281,9 +314,9 @@ latexvision/
 │   ├── models/            # classifier.py
 │   ├── training/          # train_classifier.py, evaluate_classifier.py
 │   ├── recognition/        # Phase 3+ (not yet implemented)
-│   └── api/                # Phase 2 (not yet implemented)
-├── frontend/              # Phase 2 (not yet implemented)
-└── tests/                 # test_classifier.py, test_data.py
+│   └── api/                # main.py, inference.py
+├── frontend/              # index.html, styles.css, app.js
+└── tests/                 # test_classifier.py, test_data.py, test_evaluate.py, test_api.py
 ```
 
 ## Testing
@@ -292,7 +325,11 @@ latexvision/
 pytest
 ```
 
-8 tests covering the dataset loader (class filtering, stratified splitting,
-tensor shapes) and the classifier (output shape, determinism, gradient
-flow). Tests that require the downloaded HASYv2 data are skipped
-automatically if it's not present.
+18 tests covering the dataset loader (class filtering, stratified splitting,
+tensor shapes, content-cropping), the classifier (output shape, determinism,
+gradient flow), evaluation (bootstrap confidence interval sanity checks),
+and the API (health check, frontend served, blank-canvas rejection, a real
+prediction end-to-end via FastAPI's `TestClient`). Tests that require the
+downloaded HASYv2 data or a trained checkpoint are skipped automatically
+if either isn't present -- this is also what CI runs, without fetching the
+dataset (see `.github/workflows/ci.yml`).
