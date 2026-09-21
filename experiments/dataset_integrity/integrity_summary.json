@@ -1,0 +1,40 @@
+{
+  "total_images": 8748,
+  "n_corrupted": 0,
+  "dimensions": {
+    "(32, 32)": 8748
+  },
+  "n_blank_or_near_blank": 0,
+  "n_exact_duplicate_groups": 17,
+  "n_images_in_duplicate_groups": 45,
+  "n_cross_class_duplicates": 0,
+  "class_counts": {
+    "b": 57,
+    "y": 58,
+    "z": 60,
+    "4": 61,
+    "x": 66,
+    "c": 67,
+    "7": 75,
+    "5": 78,
+    "a": 86,
+    "plus": 90,
+    "9": 90,
+    "6": 100,
+    "gt": 101,
+    "lt": 114,
+    "1": 118,
+    "minus": 118,
+    "3": 120,
+    "8": 121,
+    "2": 124,
+    "0": 133,
+    "rbracket": 259,
+    "div": 335,
+    "lbracket": 916,
+    "sqrt": 978,
+    "times": 1509,
+    "infty": 2914
+  },
+  "imbalance_ratio": 51.12280701754386
+}

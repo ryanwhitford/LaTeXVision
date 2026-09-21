@@ -1,0 +1,30 @@
+{
+  "description": "Live test: 17 symbols drawn by hand (mouse drag, via the Claude Code browser tool) through the actual LaTeXVision canvas at http://127.0.0.1:8731, POSTed through the real frontend -> FastAPI -> SymbolPredictor pipeline. Not synthetic perturbations of HASYv2 images -- genuinely new strokes, drawn fresh, never seen by the model in any form.",
+  "methodology_caveat": "Strokes were built from straight-line drag segments only (the available browser-automation primitive); no curve/pressure simulation. This systematically disadvantages curved symbols (0, a, infty) relative to natural human handwriting -- see analysis in RESULTS.md. Read this as a stress test of blocky/angular renderings, not a representative estimate of real human handwriting accuracy.",
+  "model": "models/symbol_classifier_v1 (exp1_content_crop)",
+  "draws": [
+    {"target": "1", "predicted": "1", "confidence": 0.9354, "correct": true},
+    {"target": "0", "predicted": "times", "confidence": 0.5426, "correct": false, "true_label_in_top5": false},
+    {"target": "7", "predicted": "7", "confidence": 0.7042, "correct": true},
+    {"target": "a", "predicted": "9", "confidence": 0.6122, "correct": false, "true_label_in_top5": false},
+    {"target": "b", "predicted": "b", "confidence": 0.9521, "correct": true},
+    {"target": "x", "predicted": "times", "confidence": 0.8926, "correct": false, "true_label_in_top5": true, "true_label_rank": 2, "true_label_confidence": 0.1074},
+    {"target": "y", "predicted": "y", "confidence": 0.8991, "correct": true},
+    {"target": "z", "predicted": "z", "confidence": 0.9934, "correct": true},
+    {"target": "plus", "predicted": "plus", "confidence": 0.9982, "correct": true},
+    {"target": "minus", "predicted": "minus", "confidence": 0.9963, "correct": true},
+    {"target": "times", "predicted": "times", "confidence": 0.9047, "correct": true},
+    {"target": "lt", "predicted": "lt", "confidence": 0.9992, "correct": true},
+    {"target": "gt", "predicted": "gt", "confidence": 0.9989, "correct": true},
+    {"target": "lbracket", "predicted": "lbracket", "confidence": 0.9627, "correct": true},
+    {"target": "rbracket", "predicted": "rbracket", "confidence": 0.9985, "correct": true},
+    {"target": "sqrt", "predicted": "sqrt", "confidence": 0.8643, "correct": true},
+    {"target": "infty", "predicted": "div", "confidence": 0.3463, "correct": false, "true_label_in_top5": true, "true_label_rank": 2, "true_label_confidence": 0.3038}
+  ],
+  "summary": {
+    "n": 17,
+    "top1_accuracy": 0.7647058823529411,
+    "top2_accuracy": 0.8823529411764706,
+    "misses": ["0", "a", "x", "infty"]
+  }
+}
