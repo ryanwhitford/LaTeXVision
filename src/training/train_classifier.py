@@ -60,6 +60,13 @@ def parse_args() -> argparse.Namespace:
         help="Apply crop_to_content before resizing (must match inference; see get_transforms docstring).",
     )
     parser.add_argument(
+        "--stroke-width-aug",
+        type=str,
+        default=None,
+        choices=["true", "false"],
+        help="Randomly thin/thicken strokes during training (see RandomStrokeWidth).",
+    )
+    parser.add_argument(
         "--max-samples-per-class",
         type=int,
         default=None,
@@ -89,6 +96,9 @@ def load_config(args: argparse.Namespace) -> dict:
         ("output", "run_name"): args.run_name,
         ("preprocessing", "content_crop"): (
             None if args.content_crop is None else args.content_crop == "true"
+        ),
+        ("preprocessing", "stroke_width_aug"): (
+            None if args.stroke_width_aug is None else args.stroke_width_aug == "true"
         ),
     }
     for keys, value in overrides.items():
@@ -178,7 +188,10 @@ def main() -> None:
         split_df[["path", "class_name", "label"]].to_csv(output_dir / f"{name}_split.csv", index=False)
 
     content_crop = config["preprocessing"]["content_crop"]
-    train_transform = get_transforms(dataset_config.image_size, train=True, content_crop=content_crop)
+    stroke_width_aug = config["preprocessing"]["stroke_width_aug"]
+    train_transform = get_transforms(
+        dataset_config.image_size, train=True, content_crop=content_crop, stroke_width_aug=stroke_width_aug
+    )
     eval_transform = get_transforms(dataset_config.image_size, train=False, content_crop=content_crop)
 
     train_ds = HASYSymbolDataset(train_df, transform=train_transform)

@@ -10,8 +10,10 @@ heavy distortion destroys the stroke shape a human reader relies on.
 
 from __future__ import annotations
 
+import random
+
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageFilter
 from torchvision import transforms
 
 # Computed once over a 2000-image sample of the selected-class HASYv2 subset.
@@ -35,7 +37,37 @@ class ContentCrop:
         return f"{self.__class__.__name__}()"
 
 
-def get_transforms(image_size: int, train: bool, content_crop: bool = False) -> transforms.Compose:
+class RandomStrokeWidth:
+    """Randomly thin or thicken strokes (PIL min/max filter over a 3x3 window).
+
+    Added after `experiments/div_bias_investigation/FINDINGS.md` found that
+    without this, the model partly uses raw ink density as a shortcut
+    feature for the sparsest classes ('minus', 'div') -- fine on clean
+    HASYv2 (precision/recall ~1.0 there) but collapses under any stroke-
+    width shift (thin or thick), which real canvas drawings routinely have
+    depending on how large a user draws relative to the canvas. `p` is the
+    probability of altering a given training image at all (vs. leaving it
+    unchanged); when triggered, thinning and thickening are equally likely.
+    """
+
+    def __init__(self, p: float = 0.3) -> None:
+        self.p = p
+
+    def __call__(self, image: Image.Image) -> Image.Image:
+        if random.random() >= self.p:
+            return image
+        # Dark ink on a light background: MinFilter thickens ink (dilation),
+        # MaxFilter thins it (erosion).
+        filt = ImageFilter.MinFilter(3) if random.random() < 0.5 else ImageFilter.MaxFilter(3)
+        return image.filter(filt)
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(p={self.p})"
+
+
+def get_transforms(
+    image_size: int, train: bool, content_crop: bool = False, stroke_width_aug: bool = False
+) -> transforms.Compose:
     """Return the preprocessing pipeline for the given split.
 
     `content_crop`: whether to run `ContentCrop` (ink-bbox crop + padding)
@@ -50,7 +82,8 @@ def get_transforms(image_size: int, train: bool, content_crop: bool = False) -> 
 
     Augmentation (train only) is a small random affine (rotation, translation,
     scale) plus mild erasing, chosen to preserve the identity of visually
-    similar symbol pairs (6/9, x/times, o/0).
+    similar symbol pairs (6/9, x/times, o/0). `stroke_width_aug` additionally
+    randomly thins/thickens strokes -- see `RandomStrokeWidth`.
     """
     steps: list = [ContentCrop()] if content_crop else []
     steps.append(transforms.Resize((image_size, image_size)))
@@ -64,6 +97,10 @@ def get_transforms(image_size: int, train: bool, content_crop: bool = False) -> 
                 shear=5,
                 fill=255,
             ),
+        ]
+        if stroke_width_aug:
+            steps.append(RandomStrokeWidth(p=0.3))
+        steps += [
             transforms.ToTensor(),
             transforms.Normalize(mean=[HASY_MEAN], std=[HASY_STD]),
             # Small occlusion patches -- extra regularization, useful now that

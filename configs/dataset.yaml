@@ -8,6 +8,15 @@
 # Parentheses/equals can be reintroduced later via the synthetic generator
 # (Phase 6) or a different source; this is a real dataset constraint, not
 # an oversight.
+#
+# '\div' (division sign) was deliberately dropped from the vocabulary --
+# not a data/model limitation like the above. Mathematical notation almost
+# never uses '÷'; division is written as a fraction, which is a Phase 4/5
+# spatial-relationship (numerator/denominator) concern, not a single symbol
+# to classify. It was also the largest source of a real, user-reported bias
+# under stroke-thickness variation (see
+# experiments/div_bias_investigation/FINDINGS.md) -- removing a symbol
+# nobody needs was a cleaner fix than compensating for it in training.
 
 raw_dir: data/raw/hasyv2_download
 labels_csv: hasy-data-labels.csv
@@ -37,7 +46,6 @@ selected_classes:
   plus: "+"
   minus: "-"
   times: "\\times"
-  div: "\\div"
   lt: "<"
   gt: ">"
   lbracket: "["

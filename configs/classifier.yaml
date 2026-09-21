@@ -10,6 +10,14 @@ preprocessing:
   # changing this here and retraining is sufficient; nothing else to sync.
   # See experiments/audit/AUDIT_REPORT.md, Finding 1.
   content_crop: true
+  # Randomly thin/thicken strokes during training (train-only; doesn't
+  # affect inference). Tried at p=0.3 in experiments/div_bias_investigation/
+  # (exp2_stroke_width_aug in experiments/results.csv): fixed the targeted
+  # thin/thick-stroke robustness gap but regressed overall clean accuracy
+  # 97.87%->94.90%, a net loss -- rejected. Left here, off by default, as a
+  # tested capability in case a future, better-tuned version is worth
+  # revisiting (e.g. lower p, or erosion only).
+  stroke_width_aug: false
 
 data:
   batch_size: 64

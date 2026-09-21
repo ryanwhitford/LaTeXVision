@@ -50,7 +50,7 @@ can contain more than one symbol) — see [Roadmap](#roadmap).
 
 **Phase 1 — symbol classification:**
 - Load and filter the HASYv2 handwritten-symbol dataset to a configurable
-  26-class vocabulary.
+  25-class vocabulary.
 - Train a small CNN (`SymbolClassifier`) to classify a single handwritten
   symbol from a 32x32 grayscale crop.
 - Evaluate with accuracy, macro F1, per-class accuracy (with bootstrapped
@@ -96,9 +96,17 @@ defined in [`configs/dataset.yaml`](configs/dataset.yaml):
 |------------|---------|
 | Digits     | `0-9` |
 | Variables  | `a b c x y z` |
-| Operators  | `+ - × ÷ < >` |
+| Operators  | `+ - × < >` |
 | Grouping   | `[ ]` |
 | Other      | `√ ∞` |
+
+**`÷` was deliberately excluded**, not a data limitation like `=`/`(`/`)`
+above. Mathematical notation essentially never uses the division-sign glyph
+— division is written as a fraction, which belongs to the spatial-
+relationship phases (numerator/denominator, Phase 4/5), not single-symbol
+classification. It was also, in practice, the largest source of a real
+misclassification bias under stroke-thickness variation — see
+[`experiments/div_bias_investigation/`](experiments/div_bias_investigation/).
 
 **Known dataset gap:** `=`, `(`, and `)` are absent from HASYv2 entirely.
 Because the dataset comes from detexify lookups, nobody hand-draws a symbol
@@ -108,7 +116,7 @@ those three symbols will need to come from a different source (the Phase 6
 synthetic generator, or another dataset) before the full pipeline can handle
 expressions like `x = 1` or `(x + y)`.
 
-The 26 selected classes total **8,748 images** with substantial class
+The 25 selected classes total **8,413 images** with substantial class
 imbalance (57 examples for `b` vs. 2,914 for `∞`, and just **66 total** for
 `x` — 46 after splitting off val/test — vs. **1,509** for `\times`, since
 detexify usage frequency varies a lot by symbol). `src/data/hasy.py`
@@ -137,7 +145,7 @@ Conv(64→128) → BatchNorm → ReLU → AdaptiveAvgPool
 Flatten → Dropout → Linear(128 → num_classes)
 ```
 
-~74k parameters, ~390KB checkpoint. BatchNorm (`model.use_batchnorm` in
+~96k parameters, ~390KB checkpoint. BatchNorm (`model.use_batchnorm` in
 config, on by default) noticeably stabilizes training given how few examples
 several classes have. The goal of Phase 1 is a reliable baseline and a
 verified data pipeline, not architecture search — this is easy to swap out
@@ -189,56 +197,59 @@ to over-read when one flipped prediction swings it by 10 points —
 `evaluate_classifier.py` reports the interval alongside every per-class
 number instead of hiding that uncertainty.
 
-**Current baseline** (`models/symbol_classifier_v1`, seed 123, selected by
-best validation accuracy among 3 training runs — see below): **96.4% test
-accuracy** (95% CI 95.4–97.4%), **0.921 macro F1** across 26 classes (1,313
-test examples). A copy of this run's confusion matrix and evaluation report
-is checked into [`docs/results/`](docs/results/) for reference without
-needing to retrain.
+**Current production model** (`models/symbol_classifier_v1`): **96.4% clean
+test accuracy** (95% CI 95.3–97.4%), macro F1 0.896, weighted F1 0.964,
+across 25 classes (1,262 test examples). A copy of this run's confusion
+matrix and evaluation report is checked into
+[`docs/results/`](docs/results/) for reference without needing to retrain.
 
 ![Confusion matrix](docs/results/confusion_matrix.png)
 
-**Model-quality changes made after the first baseline (95.2% acc / 0.876
-macro F1):** BatchNorm in the CNN, `weighted_sampler` oversampling in place
-of loss-only class weighting, a slightly richer augmentation pipeline (added
-shear + light random erasing), and a longer training budget (60 epochs,
-patience 12 vs. the original 30/8). Net effect: +1.2 points overall accuracy,
-+0.045 macro F1.
+This project is in a dedicated **Symbol Classification Optimization**
+phase — a full audit-and-iterate campaign, tracked in
+[`experiments/`](experiments/), not summarized in full here (see
+`experiments/results.csv` for every run and `experiments/*/`for each
+investigation's writeup). The two changes that mattered most:
 
-**On `x` and `y` specifically — read the per-class numbers with the sample
-sizes in mind.** `x` and `y` have only 8–10 test examples each, so their
-point-estimate accuracy is highly sensitive to individual predictions. To
-check whether the changes above actually helped or the first run was just
-lucky/unlucky, the same config was retrained with 3 different seeds
-(identical train/val/test split — only training randomness differs):
+1. **Fixed a real train/serve preprocessing mismatch.** Training/evaluation
+   never applied the same content-cropping the deployed API always did —
+   clean-test accuracy looked fine (96.4%) while the actual deployed
+   pipeline scored ~40% on equivalent input. See
+   [`experiments/audit/AUDIT_REPORT.md`](experiments/audit/AUDIT_REPORT.md).
+   Fixing this is what today's 96.4% clean accuracy and a 97.25%-on-a-new-
+   robustness-benchmark score both now have in common: they measure the
+   pipeline that's actually deployed.
+2. **Removed `÷` from the vocabulary.** Real mathematical notation uses
+   fractions, not the division-sign glyph, and `÷` was also the largest
+   source of a confirmed misclassification bias under stroke-thickness
+   variation. See
+   [`experiments/div_bias_investigation/FINDINGS.md`](experiments/div_bias_investigation/FINDINGS.md).
 
-| seed | overall test acc | `x` acc | `y` acc |
-|------|------------------:|--------:|--------:|
-| 42   | 95.6% | 30% (3/10) | 50% (4/8) |
-| 123 (selected) | 96.4% | 60% (6/10) | 87.5% (7/8) |
-| 2024 | 96.6% | 40% (4/10) | 75% (6/8) |
+**Known, unresolved robustness gap:** the model still isn't robust to
+stroke-thickness extremes — a synthetic "thinned strokes" test scores ~1.5%,
+with almost every wrong prediction landing on `minus` (a single thin line is
+the lowest-ink-density class in the vocabulary, and training augmentation
+doesn't yet vary stroke width). A fix was attempted
+(`RandomStrokeWidth` augmentation, `experiments/results.csv:
+exp2_stroke_width_aug`) but regressed overall accuracy and was rejected;
+left as an open problem rather than shipped half-working. See
+[`src/evaluation/robustness.py`](src/evaluation/robustness.py) to reproduce
+the full 11-condition benchmark, and
+[`experiments/browser_handwriting/RESULTS.md`](experiments/browser_handwriting/RESULTS.md)
+for a live test drawn through the actual browser interface (76.5% top-1 on
+17 fresh symbols — read the methodology caveat there before citing that
+number, it's depressed by a drawing-tool artifact, not purely a model
+result).
 
-Overall accuracy is stable across seeds (95.6–96.6%) — the architecture/
-training changes reliably help in aggregate. But `x` and `y` per-class
-accuracy swings by 30 points run-to-run purely from which few examples land
-in a 10-image test set; there isn't enough `x`/`y` data in this HASYv2
-subset (46 and 41 train examples respectively) to pin down their true
-accuracy more precisely than roughly "40–70%" without more data. `x`'s
-dominant failure mode in every seed is the same, though: confusion with
-`\times`, e.g. seed 123's errors were still concentrated there. That's a
-genuine handwriting ambiguity — a hastily-drawn `×` and `x` often look
-identical in isolation, even to a human, without surrounding context — not
-a bug to chase further with this architecture or dataset. The concrete
-levers left to move `x`/`y` specifically, in rough order of expected impact,
-are more raw examples (HASYv2 has no more to give for these two classes —
-this is all of it) and disambiguating context, which is exactly what Phase 4
-(spatial relationships: is this glyph sitting where an operator belongs
-between two terms, or where a variable belongs?) is for. Single-symbol
-classification alone has a real ceiling here.
-
-This kind of confusion is exactly the motivation for eventually using
-surrounding context rather than relying on single-symbol classification
-alone.
+**On `x` specifically:** still the weakest class (recall ~30-70% depending
+on random seed, on only ~10 test examples — too little data to pin down
+more precisely). Every seed's errors concentrate on the same thing: `x`↔`×`
+confusion, confirmed again independently in the live browser test. This is
+a genuine handwriting ambiguity, not a bug — a hastily-drawn `×` and `x`
+often look identical in isolation, even to a human, without surrounding
+context. Fixing it further needs disambiguating context (Phase 4's spatial
+relationships: is this glyph sitting where an operator belongs between two
+terms, or where a variable belongs?), not more single-symbol tuning.
 
 ## API
 
@@ -335,11 +346,15 @@ latexvision/
 pytest
 ```
 
-18 tests covering the dataset loader (class filtering, stratified splitting,
+20 tests covering the dataset loader (class filtering, stratified splitting,
 tensor shapes, content-cropping), the classifier (output shape, determinism,
 gradient flow), evaluation (bootstrap confidence interval sanity checks),
-and the API (health check, frontend served, blank-canvas rejection, a real
-prediction end-to-end via FastAPI's `TestClient`). Tests that require the
-downloaded HASYv2 data or a trained checkpoint are skipped automatically
+the API (health check, frontend served, blank-canvas rejection, a real
+prediction end-to-end via FastAPI's `TestClient`), and a regression test
+asserting the training dataset path and the deployed inference path produce
+the same prediction for the same image (guards against the exact bug in
+`experiments/audit/AUDIT_REPORT.md`, Finding 1, recurring). Tests that
+require the downloaded HASYv2 data or a trained checkpoint are skipped
+automatically
 if either isn't present -- this is also what CI runs, without fetching the
 dataset (see `.github/workflows/ci.yml`).
