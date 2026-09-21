@@ -243,12 +243,22 @@ alone.
 ## API
 
 ```bash
-uvicorn src.api.main:app --reload
+uvicorn src.api.main:app --reload --port 8000
 ```
 
 Serves the frontend at `http://127.0.0.1:8000/` and the API alongside it.
 By default it loads `models/symbol_classifier_v1`; override with the
 `LATEXVISION_MODEL_DIR` environment variable to point at a different run.
+If port 8000 is already taken by something else on your machine, pass a
+different `--port` and open that port instead.
+
+**Open the served URL, not the HTML file directly.** `frontend/index.html`
+calls `fetch("/health")` and `fetch("/recognize")` as relative paths, which
+only resolve correctly when the page is loaded from the running server
+(`http://127.0.0.1:8000/...`). Opening `frontend/index.html` straight from
+disk (a `file://...` URL) will fail every request with "Could not reach the
+backend: Failed to fetch" even if the server is running fine — that error
+means the page's origin is wrong, not that the backend is down.
 
 - `GET /health` → `{"status": "ok", "model_loaded": bool}`
 - `POST /recognize` — multipart form field `file`: a symbol image (e.g. a
