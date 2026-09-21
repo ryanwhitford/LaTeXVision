@@ -74,8 +74,17 @@ generation (`H`).
 
 **Phase 3 — symbol localization** (`src/recognition/components.py`):
 - Connected-component analysis (OpenCV) over a full canvas image finds
-  candidate symbol regions, merges components that are close enough to be
-  disconnected strokes of the same symbol, and filters tiny noise specks.
+  candidate symbol regions, merges components that are close *and similar
+  enough in size* to be disconnected strokes of the same symbol, and
+  filters tiny noise specks. The size-similarity check specifically exists
+  so a small, tightly-drawn superscript/subscript (completely normal
+  handwriting) doesn't get absorbed into its base before Phase 4 ever sees
+  two symbols to relate — merging is for reassembling one broken-up symbol,
+  not for anything that looks like a base-and-modifier pair, which is a
+  fundamentally different shape (small next to large, not comparable
+  fragments). Also tuned so digits of one multi-digit number (e.g. the "3"
+  and "6" in "36") stay as separate regions rather than merging into an
+  unclassifiable blob.
 - Each region is classified independently by the existing
   `SymbolClassifier` — no separate multi-symbol model.
 
@@ -90,6 +99,12 @@ generation (`H`).
 - Symbols are grouped into `Term`s (a base with an optional
   superscript/subscript) and `Operator`s, then rendered to LaTeX —
   e.g. `x` + raised `2` → `Term(base=x, superscript=2)` → `"x^{2}"`.
+- Consecutive digit `Term`s with no operator between them render as one
+  multi-digit number rather than space-separated single digits — `"3"` then
+  `"6"` → `"36"`, not `"3 6"` — since they're two independently detected and
+  classified symbols (Phase 3 keeps them as separate regions specifically so
+  each digit gets its own crop), combined back into one number only at this
+  final rendering step.
 
 **Phase 2/3/4/5 integration:**
 - `POST /recognize-expression` (`src/api/main.py`) runs the full pipeline
@@ -424,12 +439,16 @@ latexvision/
 pytest
 ```
 
-45 tests: the dataset loader, classifier, evaluation utilities, and API
+52 tests: the dataset loader, classifier, evaluation utilities, and API
 tests described in earlier phases, plus (Phases 3-5) `test_components.py`
-(connected-component detection and merging), `test_spatial_relations.py`
-(geometry → `SUPERSCRIPT`/`SUBSCRIPT`/`SAME_BASELINE` classification,
-including a regression test for a real bug found via live browser testing —
-narrow-base symbols like `1` originally had an unrealistically tiny
+(connected-component detection and merging — including two regression
+tests from user bug reports: adjacent digits of a multi-digit number, and a
+tightly-drawn superscript, must both stay as separate regions rather than
+merging into one unclassifiable blob), `test_latex_generator.py`'s
+digit-concatenation cases, and `test_spatial_relations.py` (geometry →
+`SUPERSCRIPT`/`SUBSCRIPT`/`SAME_BASELINE` classification, including a
+regression test for a real bug found via live browser testing — narrow-base
+symbols like `1` originally had an unrealistically tiny
 modifier-attachment window because the threshold scaled off the base's
 *width*; it now scales off height), `test_expression_tree.py` (symbol →
 Term/Operator grouping), and `test_latex_generator.py` (tree → LaTeX

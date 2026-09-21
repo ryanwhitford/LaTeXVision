@@ -21,6 +21,14 @@ from src.recognition.spatial_relations import DetectedSymbol, ParserConfig, Spat
 # as a modifier-attachment target.
 OPERATOR_CLASSES = {"plus", "minus", "times", "lt", "gt"}
 
+# Digit class names -- consecutive unmodified digit Terms with no operator
+# between them are one multi-digit number (e.g. "3" then "6" -> "36"), not
+# two separate terms. Used by latex_generator.py to decide when to omit the
+# space it otherwise puts between elements. Kept here rather than in
+# latex_generator.py because it's a fact about the symbol vocabulary
+# (expression_tree.py's domain), not about LaTeX syntax.
+DIGIT_CLASSES = {str(d) for d in range(10)}
+
 
 @dataclass
 class Term:
