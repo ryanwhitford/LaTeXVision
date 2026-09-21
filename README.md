@@ -34,17 +34,23 @@ flowchart TD
     style A fill:#e8f0fe,stroke:#4285f4
     style B fill:#fef7e0,stroke:#f9ab00
     style C fill:#e6f4ea,stroke:#34a853
+    style D fill:#e6f4ea,stroke:#34a853
     style E fill:#e6f4ea,stroke:#34a853
+    style F fill:#e6f4ea,stroke:#34a853
+    style G fill:#e6f4ea,stroke:#34a853
+    style H fill:#e6f4ea,stroke:#34a853
 ```
 
-**Implemented today:** the full loop for a single symbol — `A`, `B`, `C`,
-`E`, and back to `A`. A browser canvas posts a drawing to FastAPI, which
-crops it to content (`C`), classifies it with `SymbolClassifier` (`E`), and
-returns a prediction rendered back in the page. For a single already-known
-symbol, its LaTeX is just a lookup in `class_mapping.json` — there's no
-localization or relationship inference to do yet, so `D`, `F`, `G`, and `H`
-are designed for but not yet built (they're only meaningful once an image
-can contain more than one symbol) — see [Roadmap](#roadmap).
+**Implemented today: the full loop, single symbol or a whole expression.**
+Two frontends share the same backend: `frontend/index.html` posts one
+symbol to `POST /recognize` (`A → B → C → E → A`, unchanged since Phase 2 —
+kept intentionally simple as a stable way to test the classifier in
+isolation); `frontend/expression.html` posts a full multi-symbol drawing to
+`POST /recognize-expression`, which runs the complete `A → B → C → D → E →
+F → G → H → A` loop: connected-component localization (`D`), per-region
+classification (`E`), geometry-based superscript/subscript/baseline
+inference (`F`), assembly into an intermediate tree (`G`), and LaTeX
+generation (`H`).
 
 ## Current capabilities
 
@@ -60,13 +66,42 @@ can contain more than one symbol) — see [Roadmap](#roadmap).
 - A FastAPI backend (`src/api/main.py`) exposing `POST /recognize`: accepts
   a drawn-symbol image, crops it to content, classifies it, and returns the
   predicted symbol, its LaTeX, confidence, and the top-5 candidates.
-- A canvas frontend (`frontend/`) — draw with mouse, trackpad, or touch,
-  press Recognize, see the predicted symbol rendered via MathJax with a
-  confidence bar and ranked alternatives.
+- A canvas frontend (`frontend/index.html`) — draw with mouse, trackpad, or
+  touch, press Recognize, see the predicted symbol rendered via MathJax with
+  a confidence bar and ranked alternatives. Deliberately kept as a
+  single-symbol-only test harness even after Phases 3-5 landed, so the base
+  classifier can still be evaluated/iterated on in isolation.
 
-- **Not yet implemented:** multi-symbol detection, spatial relationships,
-  and LaTeX generation for full expressions (only a single symbol at a time
-  is supported today). These are Phase 3+ (see [Roadmap](#roadmap)).
+**Phase 3 — symbol localization** (`src/recognition/components.py`):
+- Connected-component analysis (OpenCV) over a full canvas image finds
+  candidate symbol regions, merges components that are close enough to be
+  disconnected strokes of the same symbol, and filters tiny noise specks.
+- Each region is classified independently by the existing
+  `SymbolClassifier` — no separate multi-symbol model.
+
+**Phase 4 — spatial relationship engine** (`src/recognition/spatial_relations.py`):
+- Deterministic, config-driven geometry (`configs/parser.yaml`): given two
+  positioned symbols, decides `SUPERSCRIPT`, `SUBSCRIPT`, `SAME_BASELINE`,
+  or `UNRELATED` from their relative position and size. No learned model,
+  no hard-coded thresholds in the code.
+
+**Phase 5 — expression representation** (`src/recognition/expression_tree.py`,
+`latex_generator.py`):
+- Symbols are grouped into `Term`s (a base with an optional
+  superscript/subscript) and `Operator`s, then rendered to LaTeX —
+  e.g. `x` + raised `2` → `Term(base=x, superscript=2)` → `"x^{2}"`.
+
+**Phase 2/3/4/5 integration:**
+- `POST /recognize-expression` (`src/api/main.py`) runs the full pipeline
+  (`src/recognition/pipeline.py`) end-to-end and returns the assembled
+  LaTeX plus every detected symbol's position and structural role.
+- `frontend/expression.html` — a second, separate frontend: a wide canvas
+  for writing whole expressions, with a debug overlay (toggleable) drawing
+  each detected region's bounding box and role directly on the canvas.
+
+- **Not yet implemented:** fractions (`NUMERATOR_OF`/`DENOMINATOR_OF` —
+  deliberately deferred, needs fraction-bar detection, not just symbol
+  geometry) and bracket matching (`INSIDE`). See [Roadmap](#roadmap).
 
 ## Dataset
 
@@ -285,17 +320,42 @@ means the page's origin is wrong, not that the backend is down.
   }
   ```
   `400` if the canvas has no content; `503` if no trained model is loaded.
+- `POST /recognize-expression` — multipart form field `file`: a full,
+  possibly multi-symbol canvas image. Runs the complete Phase 3-5 pipeline
+  (`src/recognition/pipeline.py`) and returns:
+  ```json
+  {
+    "latex": "x^{2} + y_{1}",
+    "symbols": [
+      {"symbol": "x", "latex": "x", "confidence": 0.94, "bbox": [10,40,38,90],
+       "center": [24,65], "width": 28, "height": 50, "role": "base", "attached_to": null},
+      {"symbol": "2", "latex": "2", "confidence": 0.88, "bbox": [40,15,58,38],
+       "center": [49,26], "width": 18, "height": 23, "role": "superscript", "attached_to": "x"}
+    ]
+  }
+  ```
+  `symbols` includes every detected symbol's position and structural role
+  (`base`/`superscript`/`subscript`/`operator`), meant for a debug overlay
+  as much as for the LaTeX itself. `400` if no symbols are detected; `503`
+  if no trained model is loaded.
 
 ## Frontend
 
-Static HTML/CSS/JS at `frontend/` (canvas + "Recognize"/"Clear", served by
-the FastAPI backend above — no separate build step or server). Drawing uses
-the Pointer Events API so mouse, trackpad, and touch all work through the
-same handlers. The predicted symbol is rendered via MathJax (loaded from a
-CDN) so LaTeX commands like `\times` or `\infty` show as their actual glyph,
-not the raw string; a confidence bar and the top-5 ranked alternatives are
-shown alongside it for a fuller view of the model's output, not just the
-single top prediction.
+Two static pages at `frontend/`, both served by the FastAPI backend above
+(no separate build step or server) and both using the Pointer Events API so
+mouse, trackpad, and touch all work through the same drawing handlers:
+
+- **`index.html`** — single-symbol tester (Phase 2). A square canvas,
+  Recognize/Clear, MathJax-rendered prediction with a confidence bar and the
+  top-5 ranked alternatives. Kept deliberately unchanged by Phases 3-5 so
+  the base classifier stays independently testable.
+- **`expression.html`** — write a full expression (Phases 3-5). A wide
+  canvas, Recognize Expression/Clear, the assembled LaTeX rendered via
+  MathJax plus the raw LaTeX string, and a toggleable debug overlay drawing
+  every detected region's bounding box and role (base/superscript/
+  subscript/operator, color-coded) directly on the canvas — the fastest way
+  to see *why* the parser produced a given structure, not just what it
+  produced.
 
 ## Roadmap
 
@@ -303,41 +363,59 @@ single top prediction.
       preprocessing/augmentation, CNN classifier, training, evaluation, tests.
 - [x] **Phase 2 — Browser interface:** canvas → FastAPI → single-symbol
       prediction → rendered result.
-- [ ] **Phase 3 — Symbol localization:** connected-component / contour
-      detection to find multiple symbol regions in one image, each cropped
-      and classified independently.
-- [ ] **Phase 4 — Spatial relationship engine:** deterministic,
-      config-driven geometry rules (bounding boxes, size ratios, vertical/
-      horizontal displacement) to infer `SUPERSCRIPT`, `SUBSCRIPT`,
-      `RIGHT_OF`, `NUMERATOR_OF`, etc.
-- [ ] **Phase 5 — Expression representation:** an intermediate tree
-      structure (base/superscript/subscript/operators) decoupled from LaTeX
-      string generation.
+- [x] **Phase 3 — Symbol localization:** connected-component detection
+      (`src/recognition/components.py`) finds multiple symbol regions in one
+      image, each cropped and classified independently.
+- [x] **Phase 4 — Spatial relationship engine:** deterministic,
+      config-driven geometry rules (`configs/parser.yaml`,
+      `src/recognition/spatial_relations.py`) infer `SUPERSCRIPT`,
+      `SUBSCRIPT`, and `SAME_BASELINE`. `NUMERATOR_OF`/`DENOMINATOR_OF`
+      (fractions) and `INSIDE` (bracket matching) are deliberately not yet
+      implemented — see the note under Current Capabilities.
+- [x] **Phase 5 — Expression representation:** an intermediate tree
+      structure (`src/recognition/expression_tree.py`: base/superscript/
+      subscript/operators) decoupled from LaTeX string generation
+      (`latex_generator.py`).
 - [ ] **Phase 6 — Synthetic multi-symbol dataset:** a controlled grammar
       generator with full ground truth (image, LaTeX, symbol boxes,
       relationships, IR) for development and evaluation — and the eventual
-      source for `=`, `(`, `)`, which HASYv2 lacks.
+      source for `=`, `(`, `)`, which HASYv2 lacks, and for fractions.
 - [ ] **Phase 7 — CROHME integration:** evaluation against real handwritten
       multi-symbol expressions.
 - [ ] **Docker:** containerize the FastAPI service once it exists.
+
+**Known limitations of the Phase 3-5 implementation**, honestly stated
+rather than glossed over: the spatial-relationship thresholds in
+`configs/parser.yaml` are set from first-principles reasoning about typical
+layout, not fit to real multi-symbol data (there isn't any yet — that's
+Phase 6/7); the greedy single-pass grouping algorithm handles the common
+cases (`x^2`, `a + b`) but not chained modifiers (`x^2^3`) or a modifier
+separated from its base by noise; and localization is connected-components
+only, with no learned detector to fall back on for symbols a user draws as
+multiple disconnected, non-adjacent strokes in a way the merge heuristic
+doesn't catch.
 
 ## Project structure
 
 ```
 latexvision/
 ├── .github/workflows/     # ci.yml (pytest on push/PR)
-├── configs/              # dataset.yaml, classifier.yaml
+├── configs/              # dataset.yaml, classifier.yaml, parser.yaml
 ├── data/                 # raw/processed/synthetic (gitignored, see README)
 ├── docs/results/          # checked-in copy of the current baseline's eval report + confusion matrix
+├── experiments/           # optimization-phase audit trail: results.csv + one dir per investigation
 ├── models/               # trained checkpoints + eval artifacts (gitignored)
 ├── src/
 │   ├── data/              # hasy.py, preprocessing.py
 │   ├── models/            # classifier.py
 │   ├── training/          # train_classifier.py, evaluate_classifier.py
-│   ├── recognition/        # Phase 3+ (not yet implemented)
+│   ├── evaluation/         # robustness.py, error_analysis.py
+│   ├── recognition/        # components.py, spatial_relations.py, expression_tree.py,
+│   │                       # latex_generator.py, pipeline.py (Phases 3-5)
 │   └── api/                # main.py, inference.py
-├── frontend/              # index.html, styles.css, app.js
-└── tests/                 # test_classifier.py, test_data.py, test_evaluate.py, test_api.py
+├── frontend/              # index.html (single symbol) + expression.html (full expressions),
+│                           # styles.css, app.js, expression-styles.css, expression.js
+└── tests/                 # see Testing below
 ```
 
 ## Testing
@@ -346,14 +424,18 @@ latexvision/
 pytest
 ```
 
-20 tests covering the dataset loader (class filtering, stratified splitting,
-tensor shapes, content-cropping), the classifier (output shape, determinism,
-gradient flow), evaluation (bootstrap confidence interval sanity checks),
-the API (health check, frontend served, blank-canvas rejection, a real
-prediction end-to-end via FastAPI's `TestClient`), and a regression test
-asserting the training dataset path and the deployed inference path produce
-the same prediction for the same image (guards against the exact bug in
-`experiments/audit/AUDIT_REPORT.md`, Finding 1, recurring). Tests that
+45 tests: the dataset loader, classifier, evaluation utilities, and API
+tests described in earlier phases, plus (Phases 3-5) `test_components.py`
+(connected-component detection and merging), `test_spatial_relations.py`
+(geometry → `SUPERSCRIPT`/`SUBSCRIPT`/`SAME_BASELINE` classification,
+including a regression test for a real bug found via live browser testing —
+narrow-base symbols like `1` originally had an unrealistically tiny
+modifier-attachment window because the threshold scaled off the base's
+*width*; it now scales off height), `test_expression_tree.py` (symbol →
+Term/Operator grouping), and `test_latex_generator.py` (tree → LaTeX
+string). `test_api.py` additionally covers `/recognize-expression`
+end-to-end: blank-canvas rejection, multi-symbol detection on one baseline,
+and superscript structure detection, via FastAPI's `TestClient`. Tests that
 require the downloaded HASYv2 data or a trained checkpoint are skipped
 automatically
 if either isn't present -- this is also what CI runs, without fetching the

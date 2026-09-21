@@ -1,0 +1,37 @@
+# Geometric thresholds for spatial-relationship inference between detected
+# symbols (src/recognition/spatial_relations.py). Deliberately NOT
+# hard-coded in the parsing code -- these are the knobs to tune once real
+# multi-symbol data (synthetic, Phase 6, or CROHME, Phase 7) is available to
+# evaluate against; until then they're set from first-principles reasoning
+# about typical expression layout, not fit to data.
+#
+# All ratios are relative to the BASE symbol's height unless noted.
+
+superscript:
+  # Candidate's vertical center must be at least this far above the base's
+  # vertical center (as a fraction of the base's height) to count as raised.
+  min_vertical_offset_ratio: 0.25
+  # Candidate must be no larger than this fraction of the base's height --
+  # superscripts/subscripts are conventionally drawn smaller.
+  max_size_ratio: 0.85
+  # Candidate's left edge must be no further right than this fraction of the
+  # base's height past the base's right edge (allows slight visual overlap,
+  # which is common and legible, while still requiring rough adjacency).
+  # Scaled by height, not width, so narrow bases (e.g. '1') don't get an
+  # unrealistically tiny attachment window.
+  max_horizontal_gap_ratio: 0.6
+
+subscript:
+  min_vertical_offset_ratio: 0.25
+  max_size_ratio: 0.85
+  max_horizontal_gap_ratio: 0.6
+
+same_baseline:
+  # Two symbols are considered to share a baseline if their vertical centers
+  # differ by less than this fraction of their average height...
+  max_vertical_center_diff_ratio: 0.35
+  # ...AND their horizontal gap is no more than this multiple of the base's
+  # height. Without this, two vertically-aligned symbols on opposite sides of
+  # the canvas would incorrectly count as "same baseline" -- that label is
+  # meant to mean "adjacent reading-order neighbor," not just "level."
+  max_horizontal_gap_ratio: 2.5

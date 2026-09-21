@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LaTeXVision — Expressions</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="expression-styles.css" />
+  <script>
+    window.MathJax = { tex: { inlineMath: [['$', '$']] }, svg: { fontCache: 'global' } };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+  <div class="app expr-app">
+    <header class="header">
+      <div class="brand">
+        <span class="brand-mark">&Sigma;</span>
+        <div>
+          <h1>LaTeXVision</h1>
+          <p class="tagline">Expression recognition &mdash; Phase 3/4/5</p>
+        </div>
+      </div>
+      <div class="header-right">
+        <a class="nav-link" href="index.html">&larr; single-symbol tester</a>
+        <span class="status-pill" id="status-pill">connecting&hellip;</span>
+      </div>
+    </header>
+
+    <section class="panel expr-canvas-panel">
+      <div class="panel-label">Input &mdash; write a full expression, left to right</div>
+      <div class="canvas-stack">
+        <canvas id="canvas" width="900" height="260"></canvas>
+        <canvas id="overlay" width="900" height="260"></canvas>
+      </div>
+      <div class="controls">
+        <button id="recognize-btn" class="btn btn-primary">Recognize Expression</button>
+        <button id="clear-btn" class="btn btn-secondary">Clear</button>
+        <label class="overlay-toggle">
+          <input type="checkbox" id="overlay-toggle" checked />
+          show detected regions
+        </label>
+      </div>
+      <p class="hint">
+        Symbols: digits <code>0&ndash;9</code>, variables <code>a b c x y z</code>,
+        operators <code>+ &minus; &times; &lt; &gt;</code>, brackets <code>[ ]</code>,
+        <code>&radic;</code>, <code>&infin;</code>. Draw superscripts/subscripts smaller
+        and offset above/below &mdash; e.g. <code>x</code> then a small <code>2</code> raised
+        to its upper-right for <code>x&sup2;</code>. Fractions aren't supported yet.
+      </p>
+    </section>
+
+    <section class="panel result-panel expr-result-panel">
+      <div class="panel-label">Prediction</div>
+      <div id="result-empty" class="result-empty">
+        Write an expression and press <strong>Recognize Expression</strong>.
+      </div>
+      <div id="result-content" class="result-content hidden">
+        <div class="predicted-symbol expr-latex" id="predicted-latex">&mdash;</div>
+        <div class="latex-raw" id="latex-raw"></div>
+        <div class="panel-label">Detected symbols</div>
+        <div class="symbol-list" id="symbol-list"></div>
+      </div>
+      <div id="result-error" class="result-error hidden"></div>
+    </section>
+
+    <footer class="footer">
+      <span id="latency">&nbsp;</span>
+    </footer>
+  </div>
+
+  <script src="expression.js"></script>
+</body>
+</html>

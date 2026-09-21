@@ -1,0 +1,127 @@
+/* Additions/overrides specific to expression.html. styles.css (shared design
+   tokens, panel/button/result styles) is untouched by this file. */
+
+.expr-app {
+  max-width: 980px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.nav-link {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-dim);
+  text-decoration: none;
+  border-bottom: 1px dotted var(--border-bright);
+}
+
+.nav-link:hover {
+  color: var(--accent);
+}
+
+.expr-canvas-panel {
+  width: 100%;
+}
+
+.canvas-stack {
+  position: relative;
+  width: 100%;
+}
+
+#canvas {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 900 / 260;
+  background: var(--bg-canvas);
+  border-radius: 8px;
+  border: 1px solid var(--border-bright);
+  cursor: crosshair;
+  touch-action: none;
+  display: block;
+  background-image:
+    linear-gradient(rgba(0, 0, 0, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+#overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.overlay-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-dim);
+  white-space: nowrap;
+  padding: 0 8px;
+}
+
+.expr-result-panel {
+  min-height: unset;
+}
+
+.expr-latex {
+  font-size: 40px;
+  min-height: 70px;
+}
+
+.latex-raw {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--accent);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 12px;
+  word-break: break-all;
+}
+
+.symbol-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.symbol-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--mono);
+  font-size: 12px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border-bright);
+  color: var(--text-dim);
+}
+
+.symbol-chip .chip-symbol {
+  color: var(--text);
+  font-size: 14px;
+}
+
+.symbol-chip .chip-role {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 10px;
+}
+
+.symbol-chip.role-base { border-color: #4fd1c5; }
+.symbol-chip.role-base .chip-role { color: #4fd1c5; }
+.symbol-chip.role-superscript { border-color: #f6ad55; }
+.symbol-chip.role-superscript .chip-role { color: #f6ad55; }
+.symbol-chip.role-subscript { border-color: #b794f4; }
+.symbol-chip.role-subscript .chip-role { color: #b794f4; }
+.symbol-chip.role-operator { border-color: #8891a7; }
+.symbol-chip.role-operator .chip-role { color: #8891a7; }
