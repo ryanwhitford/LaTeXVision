@@ -1,0 +1,42 @@
+# Synthetic expression generator (src/data/synthetic_expressions.py).
+# Composes real HASYv2 handwritten glyphs into multi-symbol expressions with
+# full LaTeX ground truth.
+#
+# Layout jitter below is deliberately WIDE: real handwriting places
+# superscripts, subscripts and fraction parts inconsistently, and a model
+# trained on tidy layouts would learn positions rather than structure.
+
+# Samples per split, balanced across structure types (rejection-sampled).
+samples:
+  train: 30000
+  val: 1500
+  test: 1500
+
+structure_mix:
+  flat: 0.25
+  script: 0.25
+  nested_script: 0.25
+  fraction: 0.25
+
+grammar:
+  max_top_level_terms: 4     # terms joined by operators at the top level
+  max_inner_terms: 2          # terms inside a script / fraction part
+  max_number_digits: 3        # multi-digit numbers like "36"
+  max_depth: 3                # nesting depth for scripts/fractions
+  max_tokens: 40
+  p_bracket_group: 0.08       # [ ... ] around a sub-expression
+  p_infty: 0.03
+
+layout:
+  glyph_size: 32              # base glyph long side, px (HASYv2 native)
+  output_upscale: 3           # stored at canvas-like scale, like app input
+  gap: [0.15, 0.55]           # horizontal gap between terms, x glyph size
+  vertical_jitter: 0.12       # baseline wobble, x glyph size
+  glyph_scale_jitter: [0.85, 1.15]
+  script_scale: [0.6, 0.8]    # script glyph size relative to its base (compounds per nesting level)
+  superscript_center: [-0.2, 0.3]   # script center, relative to base top, x base height (+ = lower)
+  subscript_center: [-0.3, 0.2]     # script center, relative to base bottom, x base height (+ = lower)
+  script_gap: [-0.08, 0.2]    # gap base->script, x glyph size (negative = overlap)
+  fraction_part_scale: [0.75, 0.95]
+  fraction_bar_overhang: [1.05, 1.3]
+  fraction_gap: [0.08, 0.3]

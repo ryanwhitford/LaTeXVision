@@ -1,0 +1,47 @@
+# Image-to-LaTeX transformer (src/training/train_im2latex.py).
+
+data:
+  root: data/processed/expressions
+  manifest: data/processed/expressions/manifest.jsonl
+  train_sources: [hasy_synth, mathwriting, crohme]
+  # CROHME has no val split (its held-out set is the 2014 test set, used only
+  # for the final benchmark), so model selection uses these two.
+  val_sources: [hasy_synth, mathwriting]
+  batch_size: 32
+  # Padded-pixel budget per batch (see BucketBatchSampler). 500k keeps the
+  # worst case (136x520 images, 96 tokens) near ~3 GB of MPS memory instead
+  # of the 12 GB a fixed batch of 32 needed.
+  max_pixels_per_batch: 500000
+  augment: true
+
+encoder:
+  # Warm start is mandatory -- the trained symbol classifier's conv trunk.
+  classifier_run: models/symbol_classifier_v1
+  freeze_batchnorm: true
+  # Trunk fine-tunes at a fraction of the decoder's LR so the warm-started
+  # features adapt to full expressions without being overwritten early.
+  trunk_lr_multiplier: 0.1
+
+# Architecture fixed by the project spec -- not tuning knobs.
+model:
+  d_model: 256
+  num_layers: 4
+  nhead: 8
+  dim_feedforward: 1024
+  dropout: 0.2
+  max_len: 96
+
+# Training choices (not specified by the spec; standard for small seq2seq).
+training:
+  epochs: 30
+  learning_rate: 0.0003
+  weight_decay: 0.01
+  warmup_steps: 1000
+  label_smoothing: 0.1
+  grad_clip: 1.0
+  early_stopping_patience: 6   # epochs without val exact-match improvement
+  seed: 42
+  device: auto
+
+output:
+  run_dir: models/im2latex_v1

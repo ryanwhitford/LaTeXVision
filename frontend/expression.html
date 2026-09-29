@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>LaTeXVision — Expressions</title>
   <link rel="stylesheet" href="styles.css" />
-  <link rel="stylesheet" href="expression-styles.css" />
+  <link rel="stylesheet" href="expression-styles.css?v=2" />
   <script>
     window.MathJax = { tex: { inlineMath: [['$', '$']] }, svg: { fontCache: 'global' } };
   </script>
@@ -18,7 +18,7 @@
         <span class="brand-mark">&Sigma;</span>
         <div>
           <h1>LaTeXVision</h1>
-          <p class="tagline">Expression recognition &mdash; Phase 3/4/5</p>
+          <p class="tagline">Handwritten math &rarr; LaTeX &mdash; image-to-LaTeX transformer</p>
         </div>
       </div>
       <div class="header-right">
@@ -29,24 +29,17 @@
 
     <section class="panel expr-canvas-panel">
       <div class="panel-label">Input &mdash; write a full expression, left to right</div>
-      <div class="canvas-stack">
-        <canvas id="canvas" width="900" height="260"></canvas>
-        <canvas id="overlay" width="900" height="260"></canvas>
-      </div>
+      <canvas id="canvas" width="900" height="260"></canvas>
       <div class="controls">
         <button id="recognize-btn" class="btn btn-primary">Recognize Expression</button>
         <button id="clear-btn" class="btn btn-secondary">Clear</button>
-        <label class="overlay-toggle">
-          <input type="checkbox" id="overlay-toggle" checked />
-          show detected regions
-        </label>
       </div>
       <p class="hint">
         Symbols: digits <code>0&ndash;9</code>, variables <code>a b c x y z</code>,
         operators <code>+ &minus; &times; &lt; &gt;</code>, brackets <code>[ ]</code>,
-        <code>&radic;</code>, <code>&infin;</code>. Draw superscripts/subscripts smaller
-        and offset above/below &mdash; e.g. <code>x</code> then a small <code>2</code> raised
-        to its upper-right for <code>x&sup2;</code>. Fractions aren't supported yet.
+        <code>&infin;</code>. Structure: superscripts and subscripts (drawn smaller and
+        raised/lowered, nesting allowed, e.g. <code>x<sup>y<sup>2</sup></sup></code>) and
+        fractions (numerator, a horizontal bar, denominator).
       </p>
     </section>
 
@@ -58,8 +51,8 @@
       <div id="result-content" class="result-content hidden">
         <div class="predicted-symbol expr-latex" id="predicted-latex">&mdash;</div>
         <div class="latex-raw" id="latex-raw"></div>
-        <div class="panel-label">Detected symbols</div>
-        <div class="symbol-list" id="symbol-list"></div>
+        <div class="panel-label">Decoded tokens</div>
+        <div class="token-list" id="token-list"></div>
       </div>
       <div id="result-error" class="result-error hidden"></div>
     </section>
@@ -69,6 +62,6 @@
     </footer>
   </div>
 
-  <script src="expression.js"></script>
+  <script src="expression.js?v=2"></script>
 </body>
 </html>

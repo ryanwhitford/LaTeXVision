@@ -5,15 +5,14 @@
 # origin, a handful of ASCII-typable symbols that nobody looks up this way
 # are simply absent from the 369-class vocabulary -- notably '=', '(' and
 # ')'. Grouping symbols are therefore limited to square brackets here.
-# Parentheses/equals can be reintroduced later via the synthetic generator
-# (Phase 6) or a different source; this is a real dataset constraint, not
-# an oversight.
+# Parentheses/equals need a different data source; this is a real dataset
+# constraint, not an oversight.
 #
 # '\div' (division sign) was deliberately dropped from the vocabulary --
 # not a data/model limitation like the above. Mathematical notation almost
-# never uses '÷'; division is written as a fraction, which is a Phase 4/5
-# spatial-relationship (numerator/denominator) concern, not a single symbol
-# to classify. It was also the largest source of a real, user-reported bias
+# never uses '÷'; division is written as a fraction, which the expression
+# model handles structurally (\frac), not as a single symbol to classify.
+# It was also the largest source of a real, user-reported bias
 # under stroke-thickness variation (see
 # experiments/div_bias_investigation/FINDINGS.md) -- removing a symbol
 # nobody needs was a cleaner fix than compensating for it in training.

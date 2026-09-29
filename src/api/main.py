@@ -1,8 +1,9 @@
-"""FastAPI backend for single-symbol recognition (Phase 2).
+"""FastAPI backend.
 
-Serves the static frontend/ page and a POST /recognize endpoint that accepts
-a drawn symbol image and returns the predicted class using the classifier
-trained in Phase 1.
+Serves the static frontend/ pages, POST /recognize-expression (full
+handwritten expressions -> LaTeX via the image-to-LaTeX transformer), and
+POST /recognize (single symbols via the CNN that pretrains the
+transformer's encoder).
 
 Run with:
     uvicorn src.api.main:app --reload
@@ -23,24 +24,36 @@ from PIL import Image
 from pydantic import BaseModel
 
 from src.api.inference import SymbolPredictor
-from src.recognition.pipeline import element_roles, recognize_expression
-from src.recognition.spatial_relations import ParserConfig, load_parser_config
+from src.recognition.transformer_engine import TransformerRecognizer
 from src.training.train_classifier import resolve_device
 
 logger = logging.getLogger(__name__)
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 DEFAULT_MODEL_DIR = REPO_ROOT / "models" / "symbol_classifier_v1"
-DEFAULT_PARSER_CONFIG = REPO_ROOT / "configs" / "parser.yaml"
+DEFAULT_TRANSFORMER_DIR = REPO_ROOT / "models" / "im2latex_v1"
 FRONTEND_DIR = REPO_ROOT / "frontend"
 
 predictor: SymbolPredictor | None = None
-parser_config: ParserConfig | None = None
+transformer: TransformerRecognizer | None = None
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global predictor, parser_config
+    global predictor, transformer
+    transformer_dir = Path(os.environ.get("LATEXVISION_TRANSFORMER_DIR", DEFAULT_TRANSFORMER_DIR))
+    try:
+        # CPU: batch-1 inference on this model size is latency-bound, and
+        # CPU beat MPS for batch-1 calls in latency benchmarking.
+        transformer = TransformerRecognizer.load(transformer_dir, device=torch.device("cpu"))
+        logger.info("Loaded transformer recognizer from %s", transformer_dir)
+    except FileNotFoundError:
+        transformer = None
+        logger.warning(
+            "No transformer checkpoint at %s; /recognize-expression will return 503 until one is trained "
+            "(see README: `python -m src.training.train_im2latex`).",
+            transformer_dir,
+        )
     model_dir = Path(os.environ.get("LATEXVISION_MODEL_DIR", DEFAULT_MODEL_DIR))
     device = resolve_device(os.environ.get("LATEXVISION_DEVICE", "auto"))
     try:
@@ -54,7 +67,6 @@ async def lifespan(app: FastAPI):
             model_dir,
             e,
         )
-    parser_config = load_parser_config(DEFAULT_PARSER_CONFIG)
     yield
 
 
@@ -74,27 +86,15 @@ class RecognizeResponse(BaseModel):
     top_k: list[SymbolPredictionOut]
 
 
-class DetectedSymbolOut(BaseModel):
-    symbol: str
-    latex: str
-    confidence: float
-    bbox: list[int]
-    center: list[float]
-    width: int
-    height: int
-    role: str  # "base" | "superscript" | "subscript" | "operator"
-    attached_to: str | None = None  # base symbol's class name, if role is superscript/subscript
-
-
 class RecognizeExpressionResponse(BaseModel):
     latex: str
-    symbols: list[DetectedSymbolOut]
+    tokens: list[str]  # the decoder's canonical token sequence, e.g. ["x", "^", "{", "2", "}"]
 
 
 def _flatten_to_grayscale(image: Image.Image) -> Image.Image:
     """Canvas PNGs are typically RGBA with a transparent background; flatten
-    onto white first so downstream ink-detection sees the intended white
-    background instead of treating transparency as "ink"."""
+    onto white first so preprocessing sees the intended white background
+    instead of treating transparency as "ink"."""
     if image.mode in ("RGBA", "LA") or (image.mode == "P" and "transparency" in image.info):
         background = Image.new("RGBA", image.size, (255, 255, 255, 255))
         image = Image.alpha_composite(background, image.convert("RGBA"))
@@ -112,7 +112,7 @@ async def _read_uploaded_image(file: UploadFile) -> Image.Image:
 
 @app.get("/health")
 def health() -> dict:
-    return {"status": "ok", "model_loaded": predictor is not None}
+    return {"status": "ok", "transformer_loaded": transformer is not None, "classifier_loaded": predictor is not None}
 
 
 @app.post("/recognize", response_model=RecognizeResponse)
@@ -144,40 +144,19 @@ async def recognize(file: UploadFile = File(...)) -> RecognizeResponse:
 
 @app.post("/recognize-expression", response_model=RecognizeExpressionResponse)
 async def recognize_expression_endpoint(file: UploadFile = File(...)) -> RecognizeExpressionResponse:
-    """Multi-symbol version of /recognize (Phases 3-5): localizes every
-    symbol in the image, classifies each independently, infers
-    superscript/subscript/baseline structure from their geometry, and
-    returns the assembled LaTeX plus every detected symbol's position and
-    structural role (for a debug overlay in the frontend)."""
-    if predictor is None or parser_config is None:
+    """Full-expression recognition: CNN encoder + transformer decoder reading
+    LaTeX straight from the canvas image."""
+    if transformer is None:
         raise HTTPException(
             status_code=503,
-            detail="No trained model is loaded. Train one with "
-            "`python -m src.training.train_classifier` and restart the server.",
+            detail="No transformer checkpoint is loaded. Train one with "
+            "`python -m src.training.train_im2latex` and restart the server.",
         )
-
     image = await _read_uploaded_image(file)
-
-    result = recognize_expression(image, predictor, parser_config)
-    if not result.symbols:
+    result = transformer.recognize(image)
+    if result is None:
         raise HTTPException(status_code=400, detail="No symbols detected -- the canvas looks blank.")
-
-    rows = element_roles(result.expression)
-    symbols_out = [
-        DetectedSymbolOut(
-            symbol=row["symbol"].symbol,
-            latex=row["symbol"].latex,
-            confidence=row["symbol"].confidence,
-            bbox=list(row["symbol"].bbox),
-            center=list(row["symbol"].center),
-            width=row["symbol"].width,
-            height=row["symbol"].height,
-            role=row["role"],
-            attached_to=row["attached_to"],
-        )
-        for row in rows
-    ]
-    return RecognizeExpressionResponse(latex=result.latex, symbols=symbols_out)
+    return RecognizeExpressionResponse(latex=result.latex, tokens=result.tokens)
 
 
 # Registered last: routes above take precedence over the catch-all static mount.

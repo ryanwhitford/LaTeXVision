@@ -180,7 +180,7 @@
     try {
       const response = await fetch("/health");
       const data = await response.json();
-      if (data.model_loaded) {
+      if (data.classifier_loaded) {
         statusPill.textContent = "model ready";
         statusPill.className = "status-pill ok";
       } else {

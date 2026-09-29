@@ -1,0 +1,396 @@
+{
+  "split": "test",
+  "latency_ms_median": 41.06250000768341,
+  "groups": {
+    "ALL|ALL": {
+      "n": 1665,
+      "exact": 0.593993993993994,
+      "exact_ci95": [
+        0.56996996996997,
+        0.6162312312312311
+      ],
+      "structure_exact": 0.7021021021021021,
+      "edit_rate": 0.08112066060364079,
+      "errors": {
+        "missing_symbols": 145,
+        "wrong_symbols": 237,
+        "extra_symbols": 252,
+        "wrong_structure": 42
+      }
+    },
+    "ALL|flat": {
+      "n": 421,
+      "exact": 0.8859857482185273,
+      "exact_ci95": [
+        0.8551068883610451,
+        0.9144893111638955
+      ],
+      "structure_exact": 0.9501187648456056,
+      "edit_rate": 0.0599290739223672,
+      "errors": {
+        "wrong_structure": 1,
+        "wrong_symbols": 27,
+        "extra_symbols": 14,
+        "missing_symbols": 6
+      }
+    },
+    "ALL|fraction": {
+      "n": 437,
+      "exact": 0.5812356979405034,
+      "exact_ci95": [
+        0.5331807780320366,
+        0.6270022883295194
+      ],
+      "structure_exact": 0.7139588100686499,
+      "edit_rate": 0.0689318816536892,
+      "errors": {
+        "extra_symbols": 62,
+        "wrong_symbols": 69,
+        "missing_symbols": 42,
+        "wrong_structure": 10
+      }
+    },
+    "ALL|nested_script": {
+      "n": 384,
+      "exact": 0.3385416666666667,
+      "exact_ci95": [
+        0.2942708333333333,
+        0.385481770833333
+      ],
+      "structure_exact": 0.4817708333333333,
+      "edit_rate": 0.10634423355209716,
+      "errors": {
+        "wrong_symbols": 84,
+        "extra_symbols": 95,
+        "missing_symbols": 53,
+        "wrong_structure": 22
+      }
+    },
+    "ALL|script": {
+      "n": 423,
+      "exact": 0.5484633569739953,
+      "exact_ci95": [
+        0.4988179669030733,
+        0.5957446808510638
+      ],
+      "structure_exact": 0.6430260047281324,
+      "edit_rate": 0.09190624543044401,
+      "errors": {
+        "missing_symbols": 44,
+        "wrong_symbols": 57,
+        "extra_symbols": 81,
+        "wrong_structure": 9
+      }
+    },
+    "crohme|ALL": {
+      "n": 98,
+      "exact": 0.4897959183673469,
+      "exact_ci95": [
+        0.3877551020408163,
+        0.5918367346938775
+      ],
+      "structure_exact": 0.6122448979591837,
+      "edit_rate": 0.19626778560021838,
+      "errors": {
+        "extra_symbols": 17,
+        "wrong_symbols": 18,
+        "missing_symbols": 13,
+        "wrong_structure": 2
+      }
+    },
+    "crohme|flat": {
+      "n": 36,
+      "exact": 0.6111111111111112,
+      "exact_ci95": [
+        0.4444444444444444,
+        0.7777777777777778
+      ],
+      "structure_exact": 0.8333333333333334,
+      "edit_rate": 0.17387966971300303,
+      "errors": {
+        "wrong_symbols": 9,
+        "missing_symbols": 2,
+        "extra_symbols": 3
+      }
+    },
+    "crohme|fraction": {
+      "n": 36,
+      "exact": 0.5555555555555556,
+      "exact_ci95": [
+        0.3888888888888889,
+        0.7222222222222222
+      ],
+      "structure_exact": 0.5833333333333334,
+      "edit_rate": 0.16345854392144232,
+      "errors": {
+        "extra_symbols": 8,
+        "wrong_symbols": 2,
+        "missing_symbols": 5,
+        "wrong_structure": 1
+      }
+    },
+    "crohme|nested_script": {
+      "n": 3,
+      "exact": 0.0,
+      "exact_ci95": [
+        0.0,
+        0.0
+      ],
+      "structure_exact": 0.0,
+      "edit_rate": 0.3364661654135338,
+      "errors": {
+        "wrong_symbols": 2,
+        "missing_symbols": 1
+      }
+    },
+    "crohme|script": {
+      "n": 23,
+      "exact": 0.2608695652173913,
+      "exact_ci95": [
+        0.08695652173913043,
+        0.43478260869565216
+      ],
+      "structure_exact": 0.391304347826087,
+      "edit_rate": 0.2643769044235115,
+      "errors": {
+        "extra_symbols": 6,
+        "missing_symbols": 5,
+        "wrong_symbols": 5,
+        "wrong_structure": 1
+      }
+    },
+    "hasy_synth|ALL": {
+      "n": 1500,
+      "exact": 0.6033333333333334,
+      "exact_ci95": [
+        0.5786666666666667,
+        0.6286666666666667
+      ],
+      "structure_exact": 0.7106666666666667,
+      "edit_rate": 0.06751707326593157,
+      "errors": {
+        "missing_symbols": 126,
+        "wrong_symbols": 209,
+        "extra_symbols": 222,
+        "wrong_structure": 38
+      }
+    },
+    "hasy_synth|flat": {
+      "n": 375,
+      "exact": 0.9173333333333333,
+      "exact_ci95": [
+        0.888,
+        0.944
+      ],
+      "structure_exact": 0.9626666666666667,
+      "edit_rate": 0.03236570314217373,
+      "errors": {
+        "wrong_structure": 1,
+        "wrong_symbols": 16,
+        "extra_symbols": 10,
+        "missing_symbols": 4
+      }
+    },
+    "hasy_synth|fraction": {
+      "n": 375,
+      "exact": 0.592,
+      "exact_ci95": [
+        0.5413333333333333,
+        0.6426666666666667
+      ],
+      "structure_exact": 0.736,
+      "edit_rate": 0.05736682459695348,
+      "errors": {
+        "extra_symbols": 50,
+        "wrong_symbols": 63,
+        "missing_symbols": 33,
+        "wrong_structure": 7
+      }
+    },
+    "hasy_synth|nested_script": {
+      "n": 375,
+      "exact": 0.344,
+      "exact_ci95": [
+        0.296,
+        0.392
+      ],
+      "structure_exact": 0.49066666666666664,
+      "edit_rate": 0.10063558461268408,
+      "errors": {
+        "wrong_symbols": 81,
+        "extra_symbols": 91,
+        "missing_symbols": 52,
+        "wrong_structure": 22
+      }
+    },
+    "hasy_synth|script": {
+      "n": 375,
+      "exact": 0.56,
+      "exact_ci95": [
+        0.5093333333333333,
+        0.6106666666666667
+      ],
+      "structure_exact": 0.6533333333333333,
+      "edit_rate": 0.07970018071191497,
+      "errors": {
+        "missing_symbols": 37,
+        "wrong_symbols": 49,
+        "extra_symbols": 71,
+        "wrong_structure": 8
+      }
+    },
+    "human|ALL": {
+      "n": 165,
+      "exact": 0.509090909090909,
+      "exact_ci95": [
+        0.43636363636363634,
+        0.5818181818181818
+      ],
+      "structure_exact": 0.6242424242424243,
+      "edit_rate": 0.20478963640099726,
+      "errors": {
+        "missing_symbols": 19,
+        "extra_symbols": 30,
+        "wrong_symbols": 28,
+        "wrong_structure": 4
+      }
+    },
+    "human|flat": {
+      "n": 46,
+      "exact": 0.6304347826086957,
+      "exact_ci95": [
+        0.4782608695652174,
+        0.7608695652173914
+      ],
+      "structure_exact": 0.8478260869565217,
+      "edit_rate": 0.2846304661522053,
+      "errors": {
+        "wrong_symbols": 11,
+        "extra_symbols": 4,
+        "missing_symbols": 2
+      }
+    },
+    "human|fraction": {
+      "n": 62,
+      "exact": 0.5161290322580645,
+      "exact_ci95": [
+        0.4032258064516129,
+        0.6451612903225806
+      ],
+      "structure_exact": 0.5806451612903226,
+      "edit_rate": 0.13888182352910683,
+      "errors": {
+        "extra_symbols": 12,
+        "wrong_symbols": 6,
+        "missing_symbols": 9,
+        "wrong_structure": 3
+      }
+    },
+    "human|nested_script": {
+      "n": 9,
+      "exact": 0.1111111111111111,
+      "exact_ci95": [
+        0.0,
+        0.3333333333333333
+      ],
+      "structure_exact": 0.1111111111111111,
+      "edit_rate": 0.34420460602764186,
+      "errors": {
+        "extra_symbols": 4,
+        "wrong_symbols": 3,
+        "missing_symbols": 1
+      }
+    },
+    "human|script": {
+      "n": 48,
+      "exact": 0.4583333333333333,
+      "exact_ci95": [
+        0.3125,
+        0.6041666666666666
+      ],
+      "structure_exact": 0.5625,
+      "edit_rate": 0.1872661260439522,
+      "errors": {
+        "missing_symbols": 7,
+        "extra_symbols": 10,
+        "wrong_symbols": 8,
+        "wrong_structure": 1
+      }
+    },
+    "mathwriting_human|ALL": {
+      "n": 67,
+      "exact": 0.5373134328358209,
+      "exact_ci95": [
+        0.417910447761194,
+        0.6567164179104478
+      ],
+      "structure_exact": 0.6417910447761194,
+      "edit_rate": 0.21725443309467388,
+      "errors": {
+        "missing_symbols": 6,
+        "extra_symbols": 13,
+        "wrong_symbols": 10,
+        "wrong_structure": 2
+      }
+    },
+    "mathwriting_human|flat": {
+      "n": 10,
+      "exact": 0.7,
+      "exact_ci95": [
+        0.4,
+        1.0
+      ],
+      "structure_exact": 0.9,
+      "edit_rate": 0.6833333333333333,
+      "errors": {
+        "wrong_symbols": 2,
+        "extra_symbols": 1
+      }
+    },
+    "mathwriting_human|fraction": {
+      "n": 26,
+      "exact": 0.46153846153846156,
+      "exact_ci95": [
+        0.2692307692307692,
+        0.6538461538461539
+      ],
+      "structure_exact": 0.5769230769230769,
+      "edit_rate": 0.10485251837048848,
+      "errors": {
+        "extra_symbols": 4,
+        "wrong_symbols": 4,
+        "missing_symbols": 4,
+        "wrong_structure": 2
+      }
+    },
+    "mathwriting_human|nested_script": {
+      "n": 6,
+      "exact": 0.16666666666666666,
+      "exact_ci95": [
+        0.0,
+        0.5
+      ],
+      "structure_exact": 0.16666666666666666,
+      "edit_rate": 0.3480738263346959,
+      "errors": {
+        "extra_symbols": 4,
+        "wrong_symbols": 1
+      }
+    },
+    "mathwriting_human|script": {
+      "n": 25,
+      "exact": 0.64,
+      "exact_ci95": [
+        0.44,
+        0.8009999999999946
+      ],
+      "structure_exact": 0.72,
+      "edit_rate": 0.1163242099347576,
+      "errors": {
+        "missing_symbols": 2,
+        "extra_symbols": 4,
+        "wrong_symbols": 3
+      }
+    }
+  }
+}

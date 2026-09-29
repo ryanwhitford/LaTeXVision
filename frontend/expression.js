@@ -1,12 +1,9 @@
 (() => {
   const canvas = document.getElementById("canvas");
   const ctx = canvas.getContext("2d", { willReadFrequently: true });
-  const overlay = document.getElementById("overlay");
-  const overlayCtx = overlay.getContext("2d");
 
   const recognizeBtn = document.getElementById("recognize-btn");
   const clearBtn = document.getElementById("clear-btn");
-  const overlayToggle = document.getElementById("overlay-toggle");
   const statusPill = document.getElementById("status-pill");
   const latencyEl = document.getElementById("latency");
 
@@ -15,20 +12,14 @@
   const resultError = document.getElementById("result-error");
   const predictedLatexEl = document.getElementById("predicted-latex");
   const latexRawEl = document.getElementById("latex-raw");
-  const symbolListEl = document.getElementById("symbol-list");
+  const tokenListEl = document.getElementById("token-list");
 
   const STROKE_WIDTH = 10;
-  const ROLE_COLORS = {
-    base: "#4fd1c5",
-    superscript: "#f6ad55",
-    subscript: "#b794f4",
-    operator: "#8891a7",
-  };
+  const STRUCTURAL_TOKENS = new Set(["^", "_", "{", "}", "\\frac"]);
 
   let drawing = false;
   let hasInk = false;
   let lastPoint = null;
-  let lastSymbols = [];
 
   function resetCanvas() {
     ctx.fillStyle = "#ffffff";
@@ -38,11 +29,6 @@
     ctx.strokeStyle = "#000000";
     ctx.lineWidth = STROKE_WIDTH;
     hasInk = false;
-    clearOverlay();
-  }
-
-  function clearOverlay() {
-    overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
   }
 
   function canvasPoint(evt) {
@@ -111,23 +97,6 @@
     }
   }
 
-  function drawOverlay(symbols) {
-    clearOverlay();
-    if (!overlayToggle.checked) return;
-    const scaleX = overlay.width / canvas.width;
-    const scaleY = overlay.height / canvas.height;
-    symbols.forEach((s) => {
-      const [x1, y1, x2, y2] = s.bbox;
-      const color = ROLE_COLORS[s.role] || "#8891a7";
-      overlayCtx.strokeStyle = color;
-      overlayCtx.lineWidth = 2;
-      overlayCtx.strokeRect(x1 * scaleX, y1 * scaleY, (x2 - x1) * scaleX, (y2 - y1) * scaleY);
-      overlayCtx.fillStyle = color;
-      overlayCtx.font = "11px monospace";
-      overlayCtx.fillText(s.role, x1 * scaleX + 2, y1 * scaleY - 4 < 10 ? y2 * scaleY + 13 : y1 * scaleY - 4);
-    });
-  }
-
   function showResult(data) {
     resultEmpty.classList.add("hidden");
     resultError.classList.add("hidden");
@@ -136,28 +105,13 @@
     renderMath(predictedLatexEl, data.latex);
     latexRawEl.textContent = data.latex;
 
-    symbolListEl.innerHTML = "";
-    data.symbols.forEach((s) => {
-      const chip = document.createElement("div");
-      chip.className = `symbol-chip role-${s.role}`;
-
-      const symbolSpan = document.createElement("span");
-      symbolSpan.className = "chip-symbol";
-      renderMath(symbolSpan, s.latex);
-
-      const roleSpan = document.createElement("span");
-      roleSpan.className = "chip-role";
-      roleSpan.textContent = s.attached_to ? `${s.role} of ${s.attached_to}` : s.role;
-
-      const confSpan = document.createElement("span");
-      confSpan.textContent = `${Math.round(s.confidence * 100)}%`;
-
-      chip.append(symbolSpan, roleSpan, confSpan);
-      symbolListEl.appendChild(chip);
+    tokenListEl.innerHTML = "";
+    data.tokens.forEach((token) => {
+      const chip = document.createElement("span");
+      chip.className = STRUCTURAL_TOKENS.has(token) ? "token-chip structural" : "token-chip";
+      chip.textContent = token;
+      tokenListEl.appendChild(chip);
     });
-
-    lastSymbols = data.symbols;
-    drawOverlay(lastSymbols);
   }
 
   async function recognize() {
@@ -198,10 +152,7 @@
     resetCanvas();
     showEmpty();
     latencyEl.textContent = "";
-    lastSymbols = [];
   });
-
-  overlayToggle.addEventListener("change", () => drawOverlay(lastSymbols));
 
   recognizeBtn.addEventListener("click", recognize);
 
@@ -209,7 +160,7 @@
     try {
       const response = await fetch("/health");
       const data = await response.json();
-      if (data.model_loaded) {
+      if (data.transformer_loaded) {
         statusPill.textContent = "model ready";
         statusPill.className = "status-pill ok";
       } else {
