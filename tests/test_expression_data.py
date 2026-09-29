@@ -137,3 +137,17 @@ def test_synthetic_grammar_hits_every_requested_structure_type():
         assert in_vocab(tokens)
         box = renderer.render(tree, 32)
         assert (box.img < 128).any()
+
+
+def test_normalization_geometry_maps_back_to_the_source_image():
+    from src.data.expression_images import normalize_with_geometry
+
+    img = Image.new("L", (600, 300), 255)
+    ImageDraw.Draw(img).rectangle([150, 80, 330, 200], fill=0)
+    norm, geo = normalize_with_geometry(img)
+    assert np.array_equal(np.asarray(norm), np.asarray(normalize_expression_image(img)))  # same pixels
+    # The normalized ink's corners land back on the drawn rectangle's corners.
+    ink_v, ink_u = np.where(np.asarray(norm) < 128)
+    x0, y0 = geo.to_source(ink_u.min(), ink_v.min())
+    x1, y1 = geo.to_source(ink_u.max() + 1, ink_v.max() + 1)
+    assert abs(x0 - 150) < 3 and abs(y0 - 80) < 3 and abs(x1 - 331) < 3 and abs(y1 - 201) < 3

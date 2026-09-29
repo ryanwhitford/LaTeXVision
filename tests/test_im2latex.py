@@ -88,6 +88,19 @@ def test_history_from_log_rebuilds_epochs_for_legacy_resume(tmp_path):
     assert history_from_log(tmp_path / "missing.log") == []
 
 
+
+def test_cross_attention_gives_one_distribution_per_token_and_restores_the_decoder():
+    model = _small_model().eval()
+    images, mask = torch.randn(1, 1, 32, 96), torch.ones(1, 32, 96, dtype=torch.bool)
+    before = model.greedy_decode(images, mask, max_len=6)
+    token_ids = [VOCAB.index("x"), VOCAB.index("^"), VOCAB.index("{")]
+    attn = model.cross_attention(images, mask, token_ids)
+    assert attn.shape == (3, 8, 24)  # (tokens, H/4, W/4)
+    assert torch.allclose(attn.sum(dim=(1, 2)), torch.ones(3), atol=1e-5)
+    # The temporary need_weights patch must not leak into normal decoding.
+    assert all("forward_with_weights" not in repr(l.multihead_attn.forward) for l in model.decoder.layers)
+    assert model.greedy_decode(images, mask, max_len=6) == before
+
 _RUN_DIR = Path(__file__).resolve().parent.parent / "models/im2latex_v1"
 _MANIFEST = Path(__file__).resolve().parent.parent / "data/processed/expressions/manifest.jsonl"
 

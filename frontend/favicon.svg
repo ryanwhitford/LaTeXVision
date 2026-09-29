@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1d2250"/>
+      <stop offset="1" stop-color="#070914"/>
+    </linearGradient>
+    <linearGradient id="rim" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.7"/>
+      <stop offset="0.45" stop-color="#ffffff" stop-opacity="0.08"/>
+      <stop offset="1" stop-color="#8b5cf6" stop-opacity="0.5"/>
+    </linearGradient>
+    <linearGradient id="ink" x1="0.15" y1="0.1" x2="0.85" y2="0.95">
+      <stop offset="0" stop-color="#5ef2ff"/>
+      <stop offset="0.55" stop-color="#7c6cff"/>
+      <stop offset="1" stop-color="#d66bff"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#6d7cff" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#6d7cff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect x="2" y="2" width="60" height="60" rx="16" fill="url(#tile)"/>
+  <circle cx="33" cy="33" r="24" fill="url(#glow)"/>
+  <path d="M47 16.5 C38 14.5 27 15 17.5 16.5 L33.5 32 L17.5 47.5 C27 49 38 49.5 47.5 46.5"
+        fill="none" stroke="url(#ink)" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M44 15.8 C36 14.6 28 14.9 21 15.8" fill="none" stroke="#ffffff" stroke-opacity="0.75"
+        stroke-width="2" stroke-linecap="round"/>
+  <path d="M6 22 C6 11 11 6 22 6 H42 C50 6 55 8 57.5 12 C44 9 20 10 6 22 Z" fill="#ffffff" fill-opacity="0.09"/>
+  <rect x="2.75" y="2.75" width="58.5" height="58.5" rx="15.25" fill="none" stroke="url(#rim)" stroke-width="1.5"/>
+</svg>

@@ -20,6 +20,8 @@ tall fraction's glyphs and inflate a flat expression's; scaling so the
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 import cv2
 import numpy as np
 from PIL import Image
@@ -44,15 +46,31 @@ def estimate_glyph_extent(gray: np.ndarray, ink_threshold: int = INK_THRESHOLD) 
     return float(np.median(extents)) if len(extents) else None
 
 
-def normalize_expression_image(image: Image.Image) -> Image.Image | None:
-    """Crop to ink, rescale so the median glyph is ~TARGET_GLYPH_EXTENT px,
-    cap at MAX_HEIGHT x MAX_WIDTH, and pad a small white margin.
+@dataclass(frozen=True)
+class NormalizationGeometry:
+    """Where the normalized image came from in the source image, so model
+    outputs over the normalized image (e.g. attention maps) can be drawn
+    back onto the original canvas: source x = crop_x + (u - margin) * scale_x."""
+
+    crop_x: int
+    crop_y: int
+    scale_x: float  # source pixels per normalized pixel
+    scale_y: float
+    margin: int
+
+    def to_source(self, u: float, v: float) -> tuple[float, float]:
+        return self.crop_x + (u - self.margin) * self.scale_x, self.crop_y + (v - self.margin) * self.scale_y
+
+
+def normalize_with_geometry(image: Image.Image) -> tuple[Image.Image, NormalizationGeometry] | None:
+    """`normalize_expression_image` plus the crop/scale it applied.
     Returns None for a blank image."""
     gray = np.array(image.convert("L"))
     ink_rows, ink_cols = np.where(gray < 250)
     if len(ink_rows) == 0:
         return None
-    gray = gray[ink_rows.min() : ink_rows.max() + 1, ink_cols.min() : ink_cols.max() + 1]
+    top, left = int(ink_rows.min()), int(ink_cols.min())
+    gray = gray[top : ink_rows.max() + 1, left : ink_cols.max() + 1]
 
     extent = estimate_glyph_extent(gray)
     scale = TARGET_GLYPH_EXTENT / extent if extent else 1.0
@@ -65,4 +83,12 @@ def normalize_expression_image(image: Image.Image) -> Image.Image | None:
     resized = Image.fromarray(gray).resize((new_w, new_h), Image.LANCZOS)
     canvas = Image.new("L", (new_w + 2 * MARGIN, new_h + 2 * MARGIN), 255)
     canvas.paste(resized, (MARGIN, MARGIN))
-    return canvas
+    return canvas, NormalizationGeometry(left, top, width / new_w, height / new_h, MARGIN)
+
+
+def normalize_expression_image(image: Image.Image) -> Image.Image | None:
+    """Crop to ink, rescale so the median glyph is ~TARGET_GLYPH_EXTENT px,
+    cap at MAX_HEIGHT x MAX_WIDTH, and pad a small white margin.
+    Returns None for a blank image."""
+    result = normalize_with_geometry(image)
+    return None if result is None else result[0]

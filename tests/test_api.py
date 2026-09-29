@@ -63,3 +63,10 @@ def test_recognize_returns_prediction_for_a_drawn_digit():
     assert 0.0 <= data["confidence"] <= 1.0
     assert len(data["top_k"]) == 5
     assert sum(p["confidence"] for p in data["top_k"]) <= 1.0 + 1e-4
+
+
+def test_frontend_files_are_revalidated_on_every_load():
+    with TestClient(app) as client:
+        response = client.get("/expression.html")
+    assert response.status_code == 200
+    assert response.headers["cache-control"] == "no-cache"

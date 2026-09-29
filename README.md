@@ -411,6 +411,20 @@ MPS at batch size 1.
   {"latex": "\\frac{x^{2}}{3}", "tokens": ["\\frac", "{", "x", "^", "{", "2", "}", "}", "{", "3", "}"]}
   ```
   It returns `400` for a blank canvas and `503` if no checkpoint is loaded.
+
+  With `?explain=true` the response also includes `attention`, showing where
+  the decoder looked while emitting each token. It's computed with one extra
+  teacher-forced pass that records cross-attention, averaged over heads and
+  layers:
+  ```json
+  "attention": {"grid_h": 24, "grid_w": 47, "box": [212.0, 96.5, 668.2, 329.3], "maps": ["<base64>", "..."]}
+  ```
+  `maps[t]` is token `t`'s `grid_h × grid_w` map over the encoder's feature
+  grid, row-major, as base64 `uint8` scaled to its own peak (255). `box` is
+  the region of the *uploaded image* that the grid covers. The server
+  inverts the crop-and-rescale normalization
+  (`NormalizationGeometry` in `src/data/expression_images.py`), so a client
+  can draw the maps directly over its own canvas.
 - `GET /health`: `{"status": "ok", "transformer_loaded": bool, "classifier_loaded": bool}`
 - `POST /recognize`: single-symbol classification with the stage-1 encoder
   classifier (`models/symbol_classifier_v1`, overridable with
@@ -422,11 +436,30 @@ MPS at batch size 1.
 The `frontend/` pages are static and served by the API, with no build step.
 Drawing uses Pointer Events, so mouse, trackpad and touch all work.
 
-- **`expression.html`**, the main app: a wide canvas, Recognize and Clear
-  buttons, the result rendered with MathJax, the raw LaTeX, and the decoded
-  token sequence. Structural tokens are highlighted so you can see how the
-  model expressed the layout.
+- **`expression.html`**, the main app, with a liquid-glass theme:
+  - **Where the model looked.** Each result shows its decoded tokens as
+    glass chips, with structural tokens (`^ _ { } \frac`) in chrome. Hover
+    or tap a token to see a heatmap of the decoder's attention for that
+    token, drawn over your drawing on both the canvas and the card's
+    thumbnail. New results replay the whole sequence once, token by token;
+    **Replay** runs it again.
+  - **A 3D result deck.** Every recognition becomes a raised glass card that
+    tilts toward the cursor. Flip it for the raw LaTeX and a copy button.
+    Earlier results stack behind it, and you move through them with swipes,
+    the arrow buttons or the ← → keys. The last 12 results, heatmaps
+    included, are kept in the browser's `localStorage`.
+  - **Undo** removes the last stroke (also Cmd/Ctrl+Z). Strokes are kept
+    as point lists and the rest are redrawn exactly as drawn, so the model
+    sees the same ink it would have without the mistake.
+  - The drawing canvas itself stays plain black on white, exactly what the
+    model receives.
+  - All motion is switched off when the system is set to reduce motion.
 - **`index.html`**: a single-symbol tester for the stage-1 classifier.
+
+The favicon (`favicon.svg`, with PNG fallbacks for older browsers and iOS)
+is a liquid-glass Σ. The server sends `Cache-Control: no-cache` for
+frontend files, so browsers revalidate them and never keep serving a stale
+UI after an update.
 
 ## Testing
 
@@ -434,18 +467,18 @@ Drawing uses Pointer Events, so mouse, trackpad and touch all work.
 pytest
 ```
 
-There are **67 tests**. Tests that need downloaded data or a trained
+There are **71 tests**. Tests that need downloaded data or a trained
 checkpoint skip themselves when those are absent, so CI
-(`.github/workflows/ci.yml`) runs the other 59 on a clean checkout.
+(`.github/workflows/ci.yml`) runs the other 63 on a clean checkout.
 
 | File | Tests | Covers |
 |---|---:|---|
 | `test_latex_tokenizer.py` | 21 | Tokenizing commands versus characters; equivalent LaTeX canonicalizing equal (unbraced scripts and fraction arguments, script order, synonyms, `\left`/`\right`, `\mbox`, grouping braces, `$…$`); vocabulary filtering; encode/decode round trip; structure classification; structure skeletons |
-| `test_expression_data.py` | 10 | Both InkML point formats; stroke rendering; the normalization contract (blank input returns nothing, median glyph rescaled to 23 px); **dataset and serving producing identical tensors**; the synthetic grammar hitting every structure type; the resampling-halo regression; the bucket sampler covering every sample once and respecting its pixel budget; collate padding to shape buckets with a correct mask |
-| `test_im2latex.py` | 9 | 2D positional encoding (row and column halves independent; d_model must be divisible by 4); the trunk keeping a spatial grid; BatchNorm staying frozen in train mode; forward shapes and padding mask; greedy decoding; warm start refusing a missing checkpoint; resume-history recovery; and a **checkpoint regression test**: the trained model must keep at least 45% exact match on the 165 human test expressions (it scores 50.9%, and CPU greedy decoding is deterministic) |
+| `test_expression_data.py` | 11 | Both InkML point formats; normalization geometry mapping back onto the source image; stroke rendering; the normalization contract (blank input returns nothing, median glyph rescaled to 23 px); **dataset and serving producing identical tensors**; the synthetic grammar hitting every structure type; the resampling-halo regression; the bucket sampler covering every sample once and respecting its pixel budget; collate padding to shape buckets with a correct mask |
+| `test_im2latex.py` | 10 | Cross-attention extraction (one distribution per token, and the decoder is restored afterwards); 2D positional encoding (row and column halves independent; d_model must be divisible by 4); the trunk keeping a spatial grid; BatchNorm staying frozen in train mode; forward shapes and padding mask; greedy decoding; warm start refusing a missing checkpoint; resume-history recovery; and a **checkpoint regression test**: the trained model must keep at least 45% exact match on the 165 human test expressions (it scores 50.9%, and CPU greedy decoding is deterministic) |
 | `test_expression_benchmark.py` | 4 | Edit distance; error-bucket taxonomy; structure versus identity scoring; report rendering |
-| `test_api_expression.py` | 3 | `/recognize-expression` with a tiny untrained checkpoint: response schema and in-vocabulary tokens, `400` on a blank canvas, `503` without a checkpoint |
-| `test_api.py` | 4 | Health endpoint, static frontend, `/recognize` on a blank and a drawn symbol |
+| `test_api_expression.py` | 4 | `/recognize-expression` with a tiny untrained checkpoint: response schema and in-vocabulary tokens, `?explain=true` returning one attention map per token with a box that covers the ink, `400` on a blank canvas, `503` without a checkpoint |
+| `test_api.py` | 5 | Health endpoint, static frontend and its no-cache header, `/recognize` on a blank and a drawn symbol |
 | `test_classifier.py`, `test_data.py`, `test_evaluate.py`, `test_train_inference_consistency.py` | 16 | The stage-1 classifier: model shapes, HASYv2 loading and stratified splits, evaluation metrics and bootstrap intervals, and train/serve preprocessing parity |
 
 ## Project structure

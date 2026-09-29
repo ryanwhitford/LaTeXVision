@@ -151,6 +151,43 @@ class Im2LatexModel(nn.Module):
                 break
         return seq[:, 1:].tolist()
 
+    @torch.no_grad()
+    def cross_attention(self, images: torch.Tensor, image_mask: torch.Tensor, token_ids: list[int]) -> torch.Tensor:
+        """Where the decoder looked while emitting each token of one image's
+        output: (T, H', W') cross-attention over the encoder grid, averaged
+        over heads and layers, for the T = len(token_ids) tokens. Query t is
+        fed <bos> + token_ids[:t] -- exactly the state in which greedy
+        decoding produced token_ids[t]. Needs eval mode (no dropout)."""
+        memory, memory_pad = self.encode(images[:1], image_mask[:1])
+        h, w = self.trunk_grid(images.shape[-2:])
+        tgt = torch.tensor([[TOKEN_TO_ID[BOS], *token_ids[:-1]]], dtype=torch.long, device=images.device)
+
+        captured: list[torch.Tensor] = []
+        originals = []
+        for layer in self.decoder.layers:
+            mha = layer.multihead_attn
+            originals.append(mha.forward)
+
+            def forward_with_weights(*args, _orig=mha.forward, **kwargs):
+                kwargs["need_weights"] = True
+                kwargs["average_attn_weights"] = True
+                out, weights = _orig(*args, **kwargs)
+                captured.append(weights)
+                return out, weights
+
+            mha.forward = forward_with_weights
+        try:
+            self._decode_step(tgt, memory, memory_pad)
+        finally:
+            for layer, original in zip(self.decoder.layers, originals):
+                layer.multihead_attn.forward = original
+        attn = torch.stack(captured).mean(0)[0]  # (T, H'*W')
+        return attn.reshape(len(token_ids), h, w)
+
+    def trunk_grid(self, image_hw: torch.Size | tuple[int, int]) -> tuple[int, int]:
+        """Encoder grid size for an input of (H, W) pixels."""
+        return image_hw[0] // TRUNK_STRIDE, image_hw[1] // TRUNK_STRIDE
+
 
 def load_classifier_trunk(classifier_run_dir: Path) -> nn.Sequential:
     """The trained classifier's conv trunk minus its global pool. Raises if

@@ -1,14 +1,108 @@
-/* Additions/overrides specific to expression.html. styles.css (shared design
-   tokens, panel/button/result styles) is untouched by this file. */
+/* expression.html: liquid-glass theme, 3D result deck, attention heatmaps.
+   Self-contained -- index.html keeps styles.css. */
 
-.expr-app {
+:root {
+  --bg-deep: #070914;
+  --glass: linear-gradient(135deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.04));
+  --glass-border: rgba(255, 255, 255, 0.16);
+  --glass-edge: rgba(126, 118, 255, 0.35);
+  --text: #eef0ff;
+  --text-dim: #9aa0c3;
+  --cyan: #5ef2ff;
+  --violet: #7c6cff;
+  --magenta: #d66bff;
+  --danger: #ff7b9c;
+  /* Orbitron: display (title, labels, buttons, counters) -- wide, geometric,
+     used only in short runs. Exo 2: body copy, futuristic but readable.
+     JetBrains Mono: tokens and LaTeX, where { } ^ _ must stay unambiguous. */
+  --display: "Orbitron", "Exo 2", -apple-system, BlinkMacSystemFont, sans-serif;
+  --sans: "Exo 2", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --mono: "JetBrains Mono", "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+  --glow-cyan: 0 0 12px rgba(94, 242, 255, 0.45);
+  --radius: 22px;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg-deep);
+  color: var(--text);
+  font-family: var(--sans);
+  overflow-x: hidden;
+}
+
+/* Static color fields behind the glass -- frosted panels need something to blur. */
+.backdrop {
+  position: fixed;
+  inset: -10%;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(38% 42% at 12% 8%, rgba(94, 242, 255, 0.22), transparent 70%),
+    radial-gradient(40% 45% at 88% 22%, rgba(124, 108, 255, 0.28), transparent 70%),
+    radial-gradient(45% 40% at 70% 92%, rgba(214, 107, 255, 0.2), transparent 70%),
+    radial-gradient(30% 30% at 20% 80%, rgba(80, 120, 255, 0.16), transparent 70%);
+  filter: blur(20px);
+}
+
+.app {
+  position: relative;
+  z-index: 1;
   max-width: 980px;
+  margin: 0 auto;
+  padding: 28px 16px 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.brand-mark {
+  width: 44px;
+  height: 44px;
+  filter: drop-shadow(0 6px 18px rgba(124, 108, 255, 0.45));
+}
+
+h1 {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  background: linear-gradient(90deg, #fff, #c9c5ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.tagline {
+  margin: 3px 0 0;
+  font-size: 12.5px;
+  color: var(--text-dim);
+  font-family: var(--mono);
 }
 
 .header-right {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
 }
 
 .nav-link {
@@ -16,71 +110,731 @@
   font-size: 12px;
   color: var(--text-dim);
   text-decoration: none;
-  border-bottom: 1px dotted var(--border-bright);
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid transparent;
 }
 
 .nav-link:hover {
-  color: var(--accent);
+  color: var(--text);
+  border-color: var(--glass-border);
 }
 
-.expr-canvas-panel {
-  width: 100%;
+.status-pill {
+  font-family: var(--mono);
+  font-size: 12px;
+  padding: 6px 12px 6px 24px;
+  border-radius: 999px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-dim);
+  position: relative;
+}
+
+.status-pill::before {
+  content: "";
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  margin-top: -3.5px;
+  border-radius: 50%;
+  background: var(--text-dim);
+}
+
+.status-pill.ok {
+  color: var(--cyan);
+}
+
+.status-pill.ok::before {
+  background: var(--cyan);
+  box-shadow: 0 0 10px var(--cyan);
+}
+
+.status-pill.error {
+  color: var(--danger);
+}
+
+.status-pill.error::before {
+  background: var(--danger);
+}
+
+/* ---- glass surfaces ---- */
+
+.glass {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(22px) saturate(160%);
+  -webkit-backdrop-filter: blur(22px) saturate(160%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.25),
+    0 24px 60px -24px rgba(0, 0, 0, 0.75);
+}
+
+.pane {
+  border-radius: var(--radius);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.pane-label,
+.back-label,
+.tokens-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+/* The drawing surface stays black-on-white: it is exactly what the model
+   receives. Styling lives on the frame, never on the ink. */
+.canvas-frame {
+  position: relative;
+  border-radius: 14px;
+  padding: 3px;
+  background: linear-gradient(135deg, rgba(94, 242, 255, 0.55), rgba(124, 108, 255, 0.45), rgba(214, 107, 255, 0.5));
+  box-shadow: 0 18px 40px -18px rgba(124, 108, 255, 0.6);
 }
 
 #canvas {
+  display: block;
   width: 100%;
   height: auto;
   aspect-ratio: 900 / 260;
-  background: var(--bg-canvas);
-  border-radius: 8px;
-  border: 1px solid var(--border-bright);
+  border-radius: 11px;
+  background: #fff;
   cursor: crosshair;
   touch-action: none;
-  display: block;
-  background-image:
-    linear-gradient(rgba(0, 0, 0, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
-  background-size: 20px 20px;
 }
 
-.expr-result-panel {
-  min-height: unset;
+.heat-layer {
+  position: absolute;
+  pointer-events: none;
+  mix-blend-mode: multiply;
+  transition: opacity 0.25s ease;
 }
 
-.expr-latex {
-  font-size: 40px;
-  min-height: 70px;
+.canvas-frame .heat-layer {
+  inset: 3px;
+  width: calc(100% - 6px);
+  height: calc(100% - 6px);
+  border-radius: 11px;
 }
 
-.latex-raw {
-  font-family: var(--mono);
+.controls {
+  display: flex;
+  gap: 10px;
+}
+
+.btn {
+  font: 600 14px var(--sans);
+  letter-spacing: 0.01em;
+  padding: 11px 20px;
+  border-radius: 14px;
+  border: 1px solid var(--glass-border);
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  transition: transform 0.15s var(--ease), box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.btn:active {
+  transform: translateY(1px) scale(0.99);
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: progress;
+}
+
+.btn-primary {
+  flex: 1;
+  border-color: rgba(255, 255, 255, 0.35);
+  background: linear-gradient(120deg, rgba(94, 242, 255, 0.9), rgba(124, 108, 255, 0.9) 55%, rgba(214, 107, 255, 0.9));
+  color: #0a0b1e;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 10px 28px -10px rgba(124, 108, 255, 0.9);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(120deg, #7ff5ff, #9486ff 55%, #e08aff);
+}
+
+.btn-ghost {
+  flex: 1;
+}
+
+.controls .btn-primary {
+  flex: 2;
+}
+
+.btn-ghost:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+
+.btn:focus-visible,
+.icon-btn:focus-visible,
+.chip-btn:focus-visible,
+.token:focus-visible,
+.deck:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+}
+
+.hint {
+  margin: 0;
   font-size: 13px;
-  color: var(--accent);
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 10px 12px;
-  word-break: break-all;
+  line-height: 1.6;
+  color: var(--text-dim);
+}
+
+.hint code {
+  font-family: var(--mono);
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.07);
+  padding: 1px 5px;
+  border-radius: 5px;
+}
+
+/* ---- results deck ---- */
+
+.results {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.results-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+}
+
+.deck-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.deck-count {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-dim);
+  min-width: 52px;
+  text-align: center;
+}
+
+.icon-btn,
+.chip-btn {
+  font: 600 14px var(--sans);
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid var(--glass-border);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.15s var(--ease);
+}
+
+.icon-btn {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chip-btn {
+  font-size: 12px;
+  padding: 5px 12px;
+}
+
+.icon-btn:hover,
+.chip-btn:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.icon-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.error {
+  color: var(--danger);
+  font-size: 14px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 123, 156, 0.4);
+  background: rgba(255, 123, 156, 0.08);
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* All cards share one grid cell, so the deck is as tall as its tallest
+   card; JS sets each card's --depth and the transforms below stack them. */
+.deck {
+  display: grid;
+  perspective: 1400px;
+  perspective-origin: 50% 0%;
+  padding-top: 42px;
+  outline: none;
+  touch-action: pan-y;
+}
+
+.deck > * {
+  grid-area: 1 / 1;
+}
+
+.deck-empty {
+  border-radius: var(--radius);
+  padding: 30px 26px;
+  text-align: center;
+}
+
+.empty-title {
+  font-size: 17px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.empty-body {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-dim);
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.card {
+  --depth: 0;
+  --rx: 0deg;
+  --ry: 0deg;
+  --mx: 50%;
+  --my: 0%;
+  transform-style: preserve-3d;
+  transform-origin: 50% 0%;
+  transition: transform 0.6s var(--ease), opacity 0.45s ease, filter 0.45s ease;
+  will-change: transform;
+}
+
+/* The wrapper never takes hits: when the tilted card-inner dips behind the
+   wrapper's flat plane, 3D hit-testing would otherwise land on the empty
+   wrapper instead of the tokens under the cursor. Events from the faces
+   still bubble to the card's listeners. */
+.card {
+  pointer-events: none;
+}
+
+.card .face {
+  pointer-events: auto;
+}
+
+.card.inactive .face {
+  pointer-events: none;
+}
+
+.card-inner {
+  position: relative;
+  display: grid;
+  transform-style: preserve-3d;
+  transform: rotateX(var(--rx)) rotateY(var(--ry));
+  transition: transform 0.7s var(--ease);
+}
+
+.card.flipped .card-inner {
+  transform: rotateX(var(--rx)) rotateY(calc(var(--ry) + 180deg));
+}
+
+.card.tilting .card-inner {
+  transition: transform 0.12s linear;
+}
+
+.face {
+  grid-area: 1 / 1;
+  border-radius: var(--radius);
+  padding: 18px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  background: linear-gradient(145deg, rgba(40, 44, 92, 0.78), rgba(14, 16, 38, 0.86));
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(24px) saturate(170%);
+  -webkit-backdrop-filter: blur(24px) saturate(170%);
+  /* Raised slab: lit top bevel, dark bottom bevel, then a solid 6px "edge"
+     below the face before the drop shadow. */
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.35),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.03),
+    0 1px 0 rgba(255, 255, 255, 0.06),
+    0 7px 0 -1px var(--glass-edge),
+    0 8px 0 -1px rgba(0, 0, 0, 0.4),
+    0 40px 70px -28px rgba(0, 0, 0, 0.85);
+  overflow: hidden;
+}
+
+.face.back {
+  transform: rotateY(180deg);
+}
+
+.sheen {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: radial-gradient(420px circle at var(--mx) var(--my), rgba(255, 255, 255, 0.14), transparent 45%);
+}
+
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+}
+
+.card-meta {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.thumb {
+  position: relative;
+  width: 100%;
+  max-width: 460px;
+  margin: 0 auto;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08), 0 10px 24px -14px rgba(0, 0, 0, 0.8);
+}
+
+.thumb img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 900 / 260;
+}
+
+.thumb .heat-layer {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.math {
+  font-size: 42px;
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 8px 0;
+}
+
+.tokens-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
 }
 
 .token-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 7px;
+  position: relative;
 }
 
-.token-chip {
-  font-family: var(--mono);
-  font-size: 13px;
-  padding: 4px 9px;
-  border-radius: 6px;
-  border: 1px solid var(--border-bright);
+.token {
+  font: 500 14px var(--mono);
+  min-width: 32px;
+  padding: 6px 10px;
+  border-radius: 10px;
   color: var(--text);
+  cursor: default;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.04));
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 3px 0 -1px rgba(0, 0, 0, 0.35);
+  transition: transform 0.18s var(--ease), box-shadow 0.18s ease, border-color 0.18s ease;
 }
 
-/* Structural tokens (^ _ { } \frac) are what the decoder uses to express
-   layout; color them apart from the symbols. */
-.token-chip.structural {
-  color: var(--accent);
-  border-color: var(--border);
+/* Structural tokens (^ _ { } \frac) read as liquid chrome. */
+.token.structural {
+  color: #0b0c1d;
+  border-color: rgba(255, 255, 255, 0.5);
+  background: linear-gradient(160deg, #f4f6ff 0%, #a7b0d8 45%, #e6e9ff 60%, #7e87b6 100%);
+}
+
+.token.active {
+  transform: translateY(-3px);
+  border-color: var(--cyan);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 0 0 1px var(--cyan), 0 8px 22px -6px rgba(94, 242, 255, 0.8);
+}
+
+.latex-raw {
+  margin: 0;
+  font: 14px/1.6 var(--mono);
+  color: var(--cyan);
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.back-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.back-actions .btn-primary {
+  flex: 0 0 auto;
+}
+
+.copy-status {
+  font-size: 13px;
+  color: var(--cyan);
+}
+
+.token-count {
+  font-size: 14px;
+  color: var(--text-dim);
+}
+
+@media (max-width: 600px) {
+  .pane {
+    padding: 14px;
+  }
+
+  .math {
+    font-size: 26px;
+  }
+
+  .deck {
+    padding-top: 30px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .card-inner,
+  .token,
+  .btn,
+  .heat-layer {
+    transition: none !important;
+  }
+}
+
+/* ---- typography ----
+   Kept in one place so the type system reads as a whole; these rules
+   override the font settings in the component rules above. MathJax output
+   is left alone -- rendered math keeps its own math fonts. */
+
+body {
+  font-family: var(--sans);
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+h1 {
+  font-family: var(--display);
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  background: linear-gradient(92deg, #ffffff 0%, #bff8ff 35%, #a99cff 70%, #e4a6ff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 14px rgba(124, 108, 255, 0.45));
+}
+
+.tagline {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+}
+
+.nav-link,
+.status-pill {
+  font-family: var(--display);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.status-pill.ok {
+  text-shadow: var(--glow-cyan);
+}
+
+.pane-label,
+.back-label,
+.tokens-label {
+  font-family: var(--display);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: #b9c2ff;
+  text-shadow: 0 0 10px rgba(124, 108, 255, 0.55);
+}
+
+.pane-label::before,
+.back-label::before,
+.tokens-label::before {
+  content: "";
+  display: inline-block;
+  width: 14px;
+  height: 2px;
+  margin: 0 10px 0 0;
+  vertical-align: middle;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--cyan), var(--violet));
+  box-shadow: var(--glow-cyan);
+}
+
+.btn {
+  font-family: var(--display);
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.btn-primary {
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+.chip-btn {
+  font-family: var(--display);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.hint {
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 300;
+  letter-spacing: 0.02em;
+  line-height: 1.7;
+}
+
+.hint code,
+.token,
+.latex-raw,
+.card-meta,
+.token-count {
+  font-family: var(--mono);
+}
+
+.btn,
+.hint code {
+  white-space: nowrap;
+}
+
+.card-meta {
+  font-size: 11.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.deck-count {
+  font-family: var(--display);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  text-shadow: var(--glow-cyan);
+}
+
+.empty-title {
+  font-family: var(--display);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  background: linear-gradient(92deg, #ffffff, #bff8ff 45%, #b3a8ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.empty-body {
+  font-family: var(--sans);
+  font-size: 15px;
+  font-weight: 300;
+  letter-spacing: 0.02em;
+}
+
+.token {
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.latex-raw {
+  font-size: 14.5px;
+  letter-spacing: 0.02em;
+  text-shadow: 0 0 10px rgba(94, 242, 255, 0.35);
+}
+
+.token-count {
+  font-size: 13px;
+  letter-spacing: 0.03em;
+}
+
+.copy-status {
+  font-family: var(--display);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  text-shadow: var(--glow-cyan);
+}
+
+.error {
+  font-family: var(--sans);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+@media (max-width: 600px) {
+  h1 {
+    font-size: 18px;
+    letter-spacing: 0.1em;
+  }
+
+  .btn {
+    font-size: 10.5px;
+    letter-spacing: 0.1em;
+    padding: 11px 8px;
+  }
+
+  .pane-label,
+  .back-label,
+  .tokens-label {
+    letter-spacing: 0.18em;
+  }
 }

@@ -18,7 +18,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 import torch
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import FastAPI, File, HTTPException, Query, UploadFile
 from fastapi.staticfiles import StaticFiles
 from PIL import Image
 from pydantic import BaseModel
@@ -86,9 +86,22 @@ class RecognizeResponse(BaseModel):
     top_k: list[SymbolPredictionOut]
 
 
+class AttentionOut(BaseModel):
+    """Per-token cross-attention, for drawing "where the model looked".
+    maps[t] is token t's grid_h x grid_w map, row-major, base64 uint8 with
+    its peak at 255; box is the (x0, y0, x1, y1) region of the uploaded
+    image that the grid covers."""
+
+    grid_h: int
+    grid_w: int
+    box: list[float]
+    maps: list[str]
+
+
 class RecognizeExpressionResponse(BaseModel):
     latex: str
     tokens: list[str]  # the decoder's canonical token sequence, e.g. ["x", "^", "{", "2", "}"]
+    attention: AttentionOut | None = None  # only with ?explain=true
 
 
 def _flatten_to_grayscale(image: Image.Image) -> Image.Image:
@@ -142,8 +155,11 @@ async def recognize(file: UploadFile = File(...)) -> RecognizeResponse:
     )
 
 
-@app.post("/recognize-expression", response_model=RecognizeExpressionResponse)
-async def recognize_expression_endpoint(file: UploadFile = File(...)) -> RecognizeExpressionResponse:
+@app.post("/recognize-expression", response_model=RecognizeExpressionResponse, response_model_exclude_none=True)
+async def recognize_expression_endpoint(
+    file: UploadFile = File(...),
+    explain: bool = Query(False, description="Also return per-token cross-attention maps"),
+) -> RecognizeExpressionResponse:
     """Full-expression recognition: CNN encoder + transformer decoder reading
     LaTeX straight from the canvas image."""
     if transformer is None:
@@ -153,10 +169,25 @@ async def recognize_expression_endpoint(file: UploadFile = File(...)) -> Recogni
             "`python -m src.training.train_im2latex` and restart the server.",
         )
     image = await _read_uploaded_image(file)
-    result = transformer.recognize(image)
+    result = transformer.recognize(image, explain=explain)
     if result is None:
         raise HTTPException(status_code=400, detail="No symbols detected -- the canvas looks blank.")
-    return RecognizeExpressionResponse(latex=result.latex, tokens=result.tokens)
+    attention = None
+    if result.attention is not None:
+        a = result.attention
+        attention = AttentionOut(grid_h=a.grid_h, grid_w=a.grid_w, box=[round(v, 2) for v in a.box], maps=a.maps)
+    return RecognizeExpressionResponse(latex=result.latex, tokens=result.tokens, attention=attention)
+
+
+@app.middleware("http")
+async def revalidate_frontend(request, call_next):
+    """Frontend files change with the code; without this, browsers
+    heuristically cache HTML/JS and keep serving a stale UI after an update.
+    `no-cache` still allows caching, but revalidates (ETag) on every load."""
+    response = await call_next(request)
+    if request.method == "GET" and not request.url.path.startswith(("/health", "/recognize")):
+        response.headers.setdefault("Cache-Control", "no-cache")
+    return response
 
 
 # Registered last: routes above take precedence over the catch-all static mount.

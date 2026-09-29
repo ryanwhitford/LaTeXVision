@@ -61,3 +61,22 @@ def test_rejects_blank_canvas(tiny_transformer_dir, monkeypatch):
     with TestClient(app) as client:
         r = client.post("/recognize-expression", files={"file": ("b.png", blank.getvalue(), "image/png")})
     assert r.status_code == 400
+
+
+def test_explain_returns_one_attention_map_per_token(tiny_transformer_dir, monkeypatch):
+    import base64
+
+    monkeypatch.setenv("LATEXVISION_TRANSFORMER_DIR", str(tiny_transformer_dir))
+    with TestClient(app) as client:
+        r = client.post("/recognize-expression?explain=true", files={"file": ("e.png", _png(), "image/png")})
+    assert r.status_code == 200
+    body = r.json()
+    attn = body["attention"]
+    assert len(attn["maps"]) == len(body["tokens"])
+    for m in attn["maps"]:
+        cells = base64.b64decode(m)
+        assert len(cells) == attn["grid_h"] * attn["grid_w"]
+        assert max(cells) == 255  # each map is scaled to its own peak
+    x0, y0, x1, y1 = attn["box"]
+    # The grid covers the inked region of the 600x300 upload (ink spans x 80-430, y 100-220).
+    assert x0 < 80 < 430 < x1 and y0 < 100 < 220 < y1

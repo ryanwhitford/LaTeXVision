@@ -3,65 +3,116 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LaTeXVision — Expressions</title>
-  <link rel="stylesheet" href="styles.css" />
-  <link rel="stylesheet" href="expression-styles.css?v=2" />
+  <meta name="theme-color" content="#070914" />
+  <title>LaTeXVision</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;800&family=Exo+2:ital,wght@0,300;0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" />
+  <link rel="stylesheet" href="expression-styles.css?v=7" />
   <script>
     window.MathJax = { tex: { inlineMath: [['$', '$']] }, svg: { fontCache: 'global' } };
   </script>
   <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 <body>
-  <div class="app expr-app">
+  <div class="backdrop" aria-hidden="true"></div>
+
+  <div class="app">
     <header class="header">
       <div class="brand">
-        <span class="brand-mark">&Sigma;</span>
+        <img class="brand-mark" src="favicon.svg" alt="" width="44" height="44" />
         <div>
           <h1>LaTeXVision</h1>
-          <p class="tagline">Handwritten math &rarr; LaTeX &mdash; image-to-LaTeX transformer</p>
+          <p class="tagline">Handwritten math &rarr; LaTeX &middot; image-to-LaTeX transformer</p>
         </div>
       </div>
       <div class="header-right">
-        <a class="nav-link" href="index.html">&larr; single-symbol tester</a>
+        <a class="nav-link" href="index.html">Symbol tester</a>
         <span class="status-pill" id="status-pill">connecting&hellip;</span>
       </div>
     </header>
 
-    <section class="panel expr-canvas-panel">
-      <div class="panel-label">Input &mdash; write a full expression, left to right</div>
-      <canvas id="canvas" width="900" height="260"></canvas>
+    <section class="glass pane" aria-label="Drawing canvas">
+      <div class="pane-label">Write an expression</div>
+      <div class="canvas-frame">
+        <canvas id="canvas" width="900" height="260" aria-label="Handwriting canvas"></canvas>
+        <canvas id="heat" class="heat-layer" width="900" height="260" aria-hidden="true"></canvas>
+      </div>
       <div class="controls">
-        <button id="recognize-btn" class="btn btn-primary">Recognize Expression</button>
-        <button id="clear-btn" class="btn btn-secondary">Clear</button>
+        <button id="recognize-btn" class="btn btn-primary">Recognize</button>
+        <button id="undo-btn" class="btn btn-ghost" title="Undo last stroke (Cmd/Ctrl+Z)" disabled>&#x21b6; Undo</button>
+        <button id="clear-btn" class="btn btn-ghost">Clear</button>
       </div>
       <p class="hint">
-        Symbols: digits <code>0&ndash;9</code>, variables <code>a b c x y z</code>,
-        operators <code>+ &minus; &times; &lt; &gt;</code>, brackets <code>[ ]</code>,
-        <code>&infin;</code>. Structure: superscripts and subscripts (drawn smaller and
-        raised/lowered, nesting allowed, e.g. <code>x<sup>y<sup>2</sup></sup></code>) and
-        fractions (numerator, a horizontal bar, denominator).
+        Digits <code>0&ndash;9</code>, <code>a b c x y z</code>, <code>+ &minus; &times; &lt; &gt;</code>,
+        <code>[ ]</code>, <code>&infin;</code>. Superscripts and subscripts (nesting works), and
+        fractions: numerator, a bar, denominator.
       </p>
     </section>
 
-    <section class="panel result-panel expr-result-panel">
-      <div class="panel-label">Prediction</div>
-      <div id="result-empty" class="result-empty">
-        Write an expression and press <strong>Recognize Expression</strong>.
+    <section class="results" aria-label="Results">
+      <div class="results-bar">
+        <div class="pane-label">Results</div>
+        <div class="deck-nav">
+          <button class="icon-btn" id="newer-btn" aria-label="Newer result">&#8592;</button>
+          <span class="deck-count" id="deck-count">0 / 0</span>
+          <button class="icon-btn" id="older-btn" aria-label="Older result">&#8594;</button>
+        </div>
       </div>
-      <div id="result-content" class="result-content hidden">
-        <div class="predicted-symbol expr-latex" id="predicted-latex">&mdash;</div>
-        <div class="latex-raw" id="latex-raw"></div>
-        <div class="panel-label">Decoded tokens</div>
-        <div class="token-list" id="token-list"></div>
+      <div id="error" class="error hidden" role="alert"></div>
+      <div class="deck" id="deck" tabindex="0" aria-live="polite">
+        <div class="deck-empty glass" id="deck-empty">
+          <div class="empty-title">Your results stack up here</div>
+          <div class="empty-body">
+            Each recognition becomes a card. Hover a token to see where the model looked
+            while writing it, flip a card for the raw LaTeX, and swipe through earlier ones.
+          </div>
+        </div>
       </div>
-      <div id="result-error" class="result-error hidden"></div>
     </section>
-
-    <footer class="footer">
-      <span id="latency">&nbsp;</span>
-    </footer>
   </div>
 
-  <script src="expression.js?v=2"></script>
+  <template id="card-template">
+    <article class="card">
+      <div class="card-inner">
+        <div class="face front">
+          <div class="sheen" aria-hidden="true"></div>
+          <div class="card-head">
+            <span class="card-meta"></span>
+            <button class="icon-btn flip-btn" aria-label="Show raw LaTeX">&#x21bb;</button>
+          </div>
+          <div class="thumb">
+            <img alt="Your drawing" />
+            <canvas class="heat-layer" width="900" height="260" aria-hidden="true"></canvas>
+          </div>
+          <div class="math"></div>
+          <div class="tokens-head">
+            <span class="tokens-label">Where the model looked</span>
+            <button class="chip-btn replay-btn">Replay</button>
+          </div>
+          <div class="token-list"></div>
+        </div>
+        <div class="face back">
+          <div class="card-head">
+            <span class="card-meta"></span>
+            <button class="icon-btn flip-btn" aria-label="Show rendered result">&#x21bb;</button>
+          </div>
+          <div class="back-label">LaTeX</div>
+          <pre class="latex-raw"></pre>
+          <div class="back-actions">
+            <button class="btn btn-primary copy-btn">Copy LaTeX</button>
+            <span class="copy-status" aria-live="polite"></span>
+          </div>
+          <div class="back-label">Tokens</div>
+          <div class="token-count"></div>
+        </div>
+      </div>
+    </article>
+  </template>
+
+  <script src="expression.js?v=6"></script>
 </body>
 </html>
