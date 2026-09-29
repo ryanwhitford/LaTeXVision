@@ -8,6 +8,11 @@ On 165 held-out expressions written by real people, **51% come back as
 exactly the right LaTeX**. On the full 1,665-expression test set the figure
 is **59%**, and **89%** on flat expressions. See [Results](#results).
 
+<p align="center">
+  <img src="docs/images/app-screenshot.webp" width="720"
+       alt="LaTeXVision recognizing a handwritten fraction, 4x squared over 5, shown as a rendered equation on a glass result card with its decoded LaTeX tokens" />
+</p>
+
 ## How it works
 
 ```mermaid
@@ -488,7 +493,7 @@ latexvision/
 ├── .github/workflows/      # ci.yml: pytest on push/PR
 ├── configs/                # im2latex.yaml, synthetic_expressions.yaml, classifier.yaml, dataset.yaml
 ├── data/                   # raw + processed datasets (gitignored; see Data)
-├── docs/results/           # stage-1 classifier confusion matrix + evaluation report
+├── docs/                  # images/ (README screenshot), results/ (stage-1 classifier evaluation)
 ├── experiments/
 │   ├── expression_benchmark/im2latex_v1/   # test report, summary, per-sample predictions
 │   └── ...                 # stage-1 classifier audit trail (results.csv + write-ups)
