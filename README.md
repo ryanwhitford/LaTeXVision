@@ -88,8 +88,26 @@ python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-No datasets or trained weights are committed; see the licenses under
-[Data](#data). The full pipeline, from nothing to a served model, is:
+### Use the pretrained model
+
+The trained weights are published as a
+[GitHub release](https://github.com/ryanwhitford/LaTeXVision/releases/tag/v1.0)
+under **CC BY-NC-SA 4.0**, for non-commercial use only (see
+[License notes](#license-notes)). The archive extracts into `models/`:
+`im2latex_v1` (the transformer) and `symbol_classifier_v1` (the stage-1
+encoder classifier).
+
+```bash
+curl -LO https://github.com/ryanwhitford/LaTeXVision/releases/download/v1.0/latexvision-models-v1.tar.gz
+shasum -a 256 latexvision-models-v1.tar.gz   # a9cc9015f9e3cbba42a268090585890a133d7882dae2cd0f317ae4b718698fa2
+tar -xzf latexvision-models-v1.tar.gz
+uvicorn src.api.main:app --port 8000
+```
+
+### Train from scratch
+
+No datasets are committed; see the licenses under [Data](#data). The full
+pipeline, from nothing to a served model, is:
 
 ```bash
 # 1. Encoder pretraining: symbol classifier on HASYv2 (download below)
@@ -469,10 +487,15 @@ latexvision/
 
 ## License notes
 
-The code is under this repository's [LICENSE](LICENSE). The datasets are not
-redistributed here, and each keeps its own terms:
+The code is under this repository's [LICENSE](LICENSE) (MIT). The datasets
+are not redistributed here, and each keeps its own terms:
 - HASYv2 (ODbL 1.0).
 - MathWriting (CC BY-NC-SA 4.0, non-commercial).
 - CROHME (research use; the organizers ask that it not be redistributed).
 
-A model trained on MathWriting inherits its non-commercial restriction.
+The **pretrained weights** in the
+[v1.0 release](https://github.com/ryanwhitford/LaTeXVision/releases/tag/v1.0)
+are licensed separately under **CC BY-NC-SA 4.0**. The transformer was
+trained on MathWriting, so its non-commercial, share-alike terms apply to
+the weights. They are for research and educational use; see
+`models/MODEL_LICENSE.md` in the archive.
